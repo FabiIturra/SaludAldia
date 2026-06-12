@@ -1,0 +1,27 @@
+# Framework
+Django==5.1.0
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.4.0
+
+# Base de datos
+psycopg2-binary==2.9.9
+
+# Supabase (storage)
+supabase==2.5.0
+storage3==0.7.4
+
+# Variables de entorno
+python-dotenv==1.0.1
+
+# IA
+anthropic==0.34.0
+
+# Utilidades
+Pillow==10.4.0
+python-magic==0.4.27
+
+# Desarrollo
+black==24.8.0
+flake8==7.1.1
+pytest-django==4.8.0

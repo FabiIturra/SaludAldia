@@ -1,0 +1,17 @@
+{
+  "name": "saludaldia",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/frontend", "packages/*"],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "build:frontend": "npm run build --workspace=apps/frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,css,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "prettier-plugin-tailwindcss": "^0.6.11"
+  },
+  "engines": { "node": ">=18.0.0" }
+}
