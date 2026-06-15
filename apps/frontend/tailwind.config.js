@@ -24,6 +24,16 @@ export default {
           warning:  "#F4A261",
           success:  "#52B788",
           info:     "#4EA8DE",
+
+        },
+          // Paleta principal del proyecto basada en el mockup
+          primary: {
+          dark:   "#204e4e",
+          mid:    "#316b6c",
+          accent: "#4a9a9b",
+          text:   "#7ecfcf",
+          subtle: "#b2e4e4",
+          light:  "#e0f4f4",
         },
       },
       fontFamily: {

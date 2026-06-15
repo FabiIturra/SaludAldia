@@ -5,8 +5,12 @@
 
 @layer base {
   :root {
-    --brand: #2D6A4F;
-    --brand-light: #D8F3DC;
+    --brand-dark:   #204e4e;
+    --brand-mid:    #316b6c;
+    --brand-accent: #4a9a9b;
+    --brand-text:   #7ecfcf;
+    --brand-subtle: #b2e4e4;
+    --brand-light:  #e0f4f4;
   }
   body {
     @apply bg-surface-light text-gray-900 antialiased;

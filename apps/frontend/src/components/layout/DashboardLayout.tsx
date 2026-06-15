@@ -1,51 +1,131 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/lib/store/auth.store";
+import { UserCircle,LayoutDashboard, FolderOpen, User, Sparkles, Settings, LogOut, Bell, HelpCircle, Search, } from "lucide-react";
+
 
 const NAV = [
-  { path: "/",            label: "Inicio",        icon: "🏠" },
-  { path: "/documents",   label: "Documentos",    icon: "📁" },
-  { path: "/ai-insights", label: "Análisis IA",   icon: "✨" },
-  { path: "/profile",     label: "Perfil médico", icon: "👤" },
+  { path: "/",            label: "Panel principal", icon: LayoutDashboard },
+  { path: "/documents",   label: "Mis documentos",  icon: FolderOpen },
+  { path: "/profile",     label: "Perfil médico",   icon: User },
+  { path: "/ai-insights", label: "Análisis IA",     icon: Sparkles },
+  { path: "/profile",     label: "Configuración",   icon: Settings },
 ];
 
+const FOOTER_LINKS = ["Privacidad", "Términos de Uso", "Contacto", "Ayuda"];
+
 export default function DashboardLayout() {
-  const user    = useAuthStore((s) => s.user);
-  const logout  = useAuthStore((s) => s.logout);
+  const user     = useAuthStore((s) => s.user);
+  const logout   = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen bg-surface-light">
-      <aside className="w-56 bg-white border-r border-gray-100 flex flex-col">
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand-700 flex items-center justify-center text-white font-bold text-xs">S</div>
-            <span className="font-semibold text-gray-900 text-sm">Saludaldia</span>
+    <div className="flex min-h-screen bg-gray-50">
+
+      {/* SIDEBAR */}
+      <aside className="w-52 bg-primary-dark flex flex-col flex-shrink-0 min-h-screen">
+
+        {/* Logo */}
+        <div className="p-4 border-b border-primary-mid flex items-center gap-2">
+          <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center font-bold text-xs text-primary-dark">
+            S
+          </div>
+          <div>
+            <p className="text-white text-sm font-semibold leading-none">Saludaldia</p>
+            <p className="text-primary-text text-[9px] uppercase tracking-wide mt-0.5">
+              Historial médico digital
+            </p>
           </div>
         </div>
-        {/* Nombre del paciente post-login — requerimiento del cliente */}
-        <div className="p-4 border-b border-gray-100">
-          <p className="text-xs text-gray-400">Paciente</p>
-          <p className="text-sm font-medium text-gray-900 truncate">{user?.firstName} {user?.lastName}</p>
-          {user?.rut && <p className="text-xs text-gray-400">RUT {user.rut}</p>}
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {NAV.map(({ path, label, icon }) => (
-            <NavLink key={path} to={path} end={path === "/"}
+
+        {/* Navegación */}
+        <nav className="flex-1 p-2 space-y-0.5">
+          {NAV.map(({ path, label, icon: Icon }) => (
+            <NavLink
+              key={label}
+              to={path}
+              end={path === "/"}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive ? "bg-brand-100 text-brand-900 font-medium" : "text-gray-600 hover:bg-gray-50"}`}>
-              <span>{icon}</span>{label}
+                  isActive
+                    ? "bg-primary-mid text-white font-medium"
+                    : "text-primary-subtle hover:bg-primary-mid"
+                }`
+              }
+            >
+              <Icon size={16} />
+              {label}
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-gray-100">
-          <button onClick={() => { logout(); navigate("/login"); }}
-            className="w-full px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 rounded-lg text-left">
+
+        {/* Usuario */}
+        <div className="p-3 border-t border-primary-mid flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary-mid flex items-center justify-center text-primary-subtle flex-shrink-0">
+            <UserCircle size={20} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-medium truncate">
+              {user?.firstName} {user?.lastName}
+            </p>
+            {user?.rut && (
+              <p className="text-primary-text text-[10px]">RUT {user.rut}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Cerrar sesión */}
+        <div className="p-2 border-t border-primary-mid">
+          <button
+            onClick={() => { logout(); navigate("/login"); }}
+            className="w-full px-3 py-2 text-sm text-primary-subtle hover:bg-primary-mid rounded-lg text-left transition-colors flex items-center gap-2"
+          >
+            <LogOut size={16} />
             Cerrar sesión
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto"><Outlet /></main>
+
+      {/* COLUMNA DERECHA */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+
+        {/* HEADER */}
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-5 gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 flex-1 max-w-lg">
+            <Search size={14} className="text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar documentos, recetas o doctores..."
+              className="bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400 w-full"
+            />
+          </div>
+          <div className="ml-auto flex gap-2">
+            <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+              <Bell size={15} />
+            </button>
+            <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50">
+              <HelpCircle size={15} />
+            </button>
+          </div>
+        </header>
+
+        {/* CONTENIDO */}
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+
+        {/* FOOTER */}
+        <footer className="bg-white border-t border-gray-100 px-5 py-3 flex items-center gap-4 flex-shrink-0">
+          <span className="text-primary-mid text-xs font-semibold">Saludaldia</span>
+          <span className="text-gray-400 text-xs">© 2026 Saludaldia — Seguridad de Datos Protegida</span>
+          <div className="flex gap-4 ml-auto">
+            {FOOTER_LINKS.map((link) => (
+              <a key={link} href="#" className="text-gray-500 text-xs hover:text-primary-mid transition-colors">
+                {link}
+              </a>
+            ))}
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

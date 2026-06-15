@@ -58,7 +58,7 @@ DATABASES = {"default": {
     "HOST": os.getenv("DB_HOST", "aws-1-us-west-2.pooler.supabase.com"),
     "PORT": os.getenv("DB_PORT", "5432"),
     "OPTIONS": {
-        "sslmode": "require",
+        "sslmode": os.getenv("DB_SSLMODE", "require"),
     },
 }}
 
