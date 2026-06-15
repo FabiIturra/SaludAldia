@@ -22,12 +22,12 @@ export default function DashboardLayout() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* SIDEBAR */}
-      <aside className="w-52 bg-primary-dark flex flex-col flex-shrink-0 min-h-screen">
+      <aside className="w-52 flex flex-col flex-shrink-0 min-h-screen" style={{ background: "linear-gradient(to bottom, var(--color-primary-dark), var(--color-primary-mid))" }}>
 
         {/* Logo */}
         <div className="p-4 border-b border-primary-mid flex items-center gap-2">
           <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center font-bold text-xs text-primary-dark">
-            S
+            S..
           </div>
           <div>
             <p className="text-white text-sm font-semibold leading-none">Saludaldia</p>
