@@ -26,6 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     id             = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email          = models.EmailField(unique=True)
     rut            = models.CharField(max_length=12, unique=True, null=True, blank=True)  # rut chileno del usuario
+    name           = models.CharField(max_length=60, blank=True, default="")
     is_active      = models.BooleanField(default=True)
     is_staff       = models.BooleanField(default=False)
     email_verified = models.BooleanField(default=False)  # indica si el correo ya fue verificado

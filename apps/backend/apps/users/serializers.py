@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import MedicalProfile
+from .validators import UserValidator
+
 
 class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(required=True, min_length=10, max_length=60)
@@ -9,26 +11,29 @@ class RegisterSerializer(serializers.Serializer):
 
     # la base que se usara, aqui crearemos las validaciones de entrada
     def validate_email(self, value):
-        return value
+        return value.strip()
+
+    def validate_email(self, value):
+        return UserValidator.validate_email_format(value)
 
     def validate_rut(self, value):
-        return value
+        return UserValidator().validate_rut_format(value)
 
     def validate_password(self, value):
-        return value
+        return UserValidator().validate_password_strength(value)
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
 
     def validate_email(self, value):
-        return value
+        return UserValidator.validate_email_format(value)
 
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
     def validate_email(self, value):
-        return value.lower().strip()
+        return UserValidator.validate_email_format(value)
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -36,10 +41,13 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
 
     def validate_email(self, value):
-        return value
+        return UserValidator.validate_email_format(value)
 
     def validate_new_password(self, value):
-        return value
+        return UserValidator.validate_password_strength(value)
+
+    def validate_confirm_password(self, value):
+        return UserValidator.validate_password_strength(value)
 
     def validate(self, attrs):
         new_password = attrs.get("new_password")
