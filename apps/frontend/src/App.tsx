@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/lib/store/auth.store";
+import { useThemeStore } from "@/lib/store/theme.store";
 
 // Páginas auth
 import LoginPage       from "@/pages/auth/LoginPage";
@@ -23,6 +25,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const isDarkMode = useThemeStore((s) => s.isDarkMode);
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
   return (
     <Routes>
       {/* Rutas públicas */}
