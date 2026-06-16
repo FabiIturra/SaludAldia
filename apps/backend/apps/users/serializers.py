@@ -1,40 +1,99 @@
 from rest_framework import serializers
-from .models import User, MedicalProfile
+from .models import MedicalProfile
+from .validators import UserValidator
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password         = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True)
-    first_name       = serializers.CharField()
-    last_name        = serializers.CharField()
+class RegisterSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True, min_length=10, max_length=60)
+    email = serializers.EmailField(required=True)
+    rut = serializers.CharField(required=True, min_length=7, max_length=9)
+    password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
 
-    class Meta:
-        model  = User
-        fields = ["email", "rut", "password", "confirm_password", "first_name", "last_name"]
+    # la base que se usara, aqui crearemos las validaciones de entrada
+    def validate_email(self, value):
+        return value.strip()
 
-    def validate(self, data):
-        if data["password"] != data.pop("confirm_password"):
-            raise serializers.ValidationError("Las contraseñas no coinciden")
-        return data
+    def validate_email(self, value):
+        return UserValidator.validate_email_format(value)
 
-    def create(self, validated_data):
-        first_name = validated_data.pop("first_name")
-        last_name  = validated_data.pop("last_name")
-        user = User.objects.create_user(**validated_data)
-        MedicalProfile.objects.create(user=user, first_name=first_name, last_name=last_name)
-        return user
+    def validate_rut(self, value):
+        return UserValidator().validate_rut_format(value)
 
+    def validate_password(self, value):
+        return UserValidator().validate_password_strength(value)
 
-class UserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source="medical_profile.first_name", read_only=True)
-    last_name  = serializers.CharField(source="medical_profile.last_name",  read_only=True)
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
-    class Meta:
-        model  = User
-        fields = ["id", "email", "rut", "first_name", "last_name", "email_verified", "created_at"]
+    def validate_email(self, value):
+        return UserValidator.validate_email_format(value)
 
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        return UserValidator.validate_email_format(value)
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    new_password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
+    confirm_password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
+
+    def validate_email(self, value):
+        return UserValidator.validate_email_format(value)
+
+    def validate_new_password(self, value):
+        return UserValidator.validate_password_strength(value)
+
+    def validate_confirm_password(self, value):
+        return UserValidator.validate_password_strength(value)
+
+    def validate(self, attrs):
+        new_password = attrs.get("new_password")
+        confirm_password = attrs.get("confirm_password")
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError({
+                "confirm_password": "Las contraseñas no coinciden."
+            })
+
+        return attrs
+
+class UserSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    email = serializers.EmailField()
+    rut = serializers.CharField()
+    name = serializers.CharField()
 
 class MedicalProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = MedicalProfile
-        exclude = ["user"]
+        model = MedicalProfile
+        fields = [
+            "first_name",
+            "last_name",
+            "birthdate",
+            "genre",
+            "blood_type",
+            "weight",
+            "height",
+            "profile_image",
+            "allergies",
+            "chronic_conditions",
+            "emergency_contact_name",
+            "emergency_contact_phone",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "updated_at",
+        ]
+
+    def validate_weight(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("El peso debe ser mayor a 0.")
+        return value
+
+    def validate_height(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("La altura debe ser mayor a 0.")
+        return value
