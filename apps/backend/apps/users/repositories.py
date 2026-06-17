@@ -1,73 +1,33 @@
-from django.contrib.auth import get_user_model
-
-from .models import MedicalProfile
-
-User = get_user_model()
-
-
 class UserRepository:
 
     @staticmethod
     def get_by_id(user_id):
-        return User.objects.filter(
-            id=user_id
-        ).first()
+        pass
 
     @staticmethod
     def get_by_email(email):
-        return User.objects.filter(
-            email=email
-        ).first()
+        pass
 
     @staticmethod
     def get_by_rut(rut):
-        return User.objects.filter(
-            rut=rut
-        ).first()
+        pass
 
     @staticmethod
     def exists_by_email(email):
-        return User.objects.filter(
-            email=email
-        ).exists()
+        pass
 
     @staticmethod
     def exists_by_rut(rut):
-        return User.objects.filter(
-            rut=rut
-        ).exists()
+        pass
 
     @staticmethod
     def create_user(data):
-        user = User.objects.create_user(
-            email=data["email"],
-            password=data["password"],
-            rut=data["rut"],
-            name=data["name"]
-        )
-
-        return user
+        pass
 
     @staticmethod
-    def save_user(user):
-        user.save()
-
-        return user
+    def update_password(user, new_password):
+        pass
 
     @staticmethod
-    def get_or_create_medical_profile(user):
-        profile, created = MedicalProfile.objects.get_or_create(
-            user=user,
-            defaults={
-                "first_name": "",
-                "last_name": "",
-            }
-        )
-
-        return profile
-
-    @staticmethod
-    def save_medical_profile(profile):
-        profile.save()
-
-        return profile
+    def update_user(user, data):
+        pass
