@@ -22,7 +22,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       const res = await api.post("/auth/login/", data);
-      setUser(res.data.user, res.data.access);
+      setUser(res.data.user);
       toast.success(`Bienvenido, ${res.data.user.firstName}`);
       navigate("/");
     } catch {
