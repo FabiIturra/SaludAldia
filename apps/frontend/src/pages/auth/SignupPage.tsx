@@ -6,11 +6,16 @@ import { toast } from "sonner";
 import { api } from "@/lib/api/client";
 
 const schema = z.object({
-  firstName: z.string().min(1, "Ingresa tu nombre"),
-  lastName: z.string().min(1, "Ingresa tu apellido"),
+  name: z.string().min(1, "Ingresa tu nombre completo"),
   email: z.string().email("Correo inválido"),
-  rut: z.string().optional(),
-  password: z.string().min(8, "Mínimo 8 caracteres"),
+  rut: z.string().min(1, "Ingresa tu RUT"),
+  password: z.string()
+    .min(6, "Mínimo 6 caracteres")
+    .max(12, "Máximo 12 caracteres")
+    .regex(/[A-Z]/, "Debe tener al menos una mayúscula")
+    .regex(/[a-z]/, "Debe tener al menos una minúscula")
+    .regex(/[0-9]/, "Debe tener al menos un número")
+    .regex(/[^A-Za-z0-9]/, "Debe tener al menos un símbolo"),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: "Las contraseñas no coinciden",
@@ -26,8 +31,9 @@ export default function SignupPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await api.post("/auth/register/", data);
-      toast.success("Cuenta creada. Verifica tu correo.");
+      const { confirmPassword, ...payload } = data;
+      await api.post("/auth/register/", payload);
+      toast.success("Cuenta creada correctamente.");
       navigate("/login");
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Error al crear la cuenta");
@@ -43,19 +49,42 @@ export default function SignupPage() {
         </div>
         <h1 className="text-xl font-semibold text-gray-900 mb-6">Crear cuenta</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-          {(["firstName","lastName","email","rut","password","confirmPassword"] as const).map((name) => (
-            <div key={name}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {name === "firstName" ? "Nombre" : name === "lastName" ? "Apellido" :
-                 name === "email" ? "Correo" : name === "rut" ? "RUT (opcional)" :
-                 name === "password" ? "Contraseña" : "Confirmar contraseña"}
-              </label>
-              <input {...register(name)}
-                type={name.includes("password") || name.includes("Password") ? "password" : "text"}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-              {errors[name] && <p className="text-xs text-red-500 mt-1">{errors[name]?.message}</p>}
-            </div>
-          ))}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+            <input {...register("name")} type="text"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+            <input {...register("email")} type="email"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">RUT</label>
+            <input {...register("rut")} type="text" placeholder="Ej: 12345678-9 (sin puntos)"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            {errors.rut && <p className="text-xs text-red-500 mt-1">{errors.rut.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <input {...register("password")} type="password"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+            <input {...register("confirmPassword")} type="password"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword.message}</p>}
+          </div>
+
           <button type="submit" disabled={isSubmitting}
             className="w-full py-2.5 bg-brand-700 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-60 mt-2">
             {isSubmitting ? "Creando..." : "Crear cuenta"}
