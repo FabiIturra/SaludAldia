@@ -21,9 +21,11 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Paso 1: verificar credenciales
       await api.post("/auth/login/", data);
-      
-      // Obtener datos del usuario
+      // Paso 2: obtener datos del usuario desde /auth/me/
+      // El login no devuelve el objeto user por seguridad,
+      // por eso hacemos una segunda llamada con el email      
       const meRes = await api.get(`/auth/me/?email=${data.email}`);
       setUser(meRes.data.user);
       toast.success(`Bienvenido, ${meRes.data.user.name}`);

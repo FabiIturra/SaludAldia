@@ -8,7 +8,9 @@ import { api } from "@/lib/api/client";
 const schema = z.object({
   name: z.string().min(1, "Ingresa tu nombre completo"),
   email: z.string().email("Correo inválido"),
-  rut: z.string().min(1, "Ingresa tu RUT"),
+  rut: z.string()
+  .min(1, "Ingresa tu RUT")
+  .transform((val) => val.replace(/\./g, "").replace(/-/g, "").toUpperCase()),
   password: z.string()
     .min(6, "Mínimo 6 caracteres")
     .max(12, "Máximo 12 caracteres")
@@ -66,7 +68,7 @@ export default function SignupPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">RUT</label>
-            <input {...register("rut")} type="text" placeholder="Ej: 12345678-9 (sin puntos)"
+            <input {...register("rut")} type="text" placeholder="Ej: 12345678-9 o 12345678K"
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
             {errors.rut && <p className="text-xs text-red-500 mt-1">{errors.rut.message}</p>}
           </div>
