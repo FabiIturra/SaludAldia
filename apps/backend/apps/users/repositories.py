@@ -9,35 +9,61 @@ class UserRepository:
 
     @staticmethod
     def get_by_id(user_id):
-        pass
+        return User.objects.filter(
+            id=user_id
+        ).first()
 
     @staticmethod
     def get_by_email(email):
-        pass
+        return User.objects.filter(
+            email=email
+        ).first()
 
     @staticmethod
     def get_by_rut(rut):
-        pass
+        return User.objects.filter(
+            rut=rut
+        ).first()
 
     @staticmethod
     def exists_by_email(email):
-        pass
+        return User.objects.filter(
+            email=email
+        ).exists()
+
     @staticmethod
     def exists_by_rut(rut):
-        pass
+        return User.objects.filter(
+            rut=rut
+        ).exists()
 
     @staticmethod
     def create_user(data):
-        pass
+        user = User.objects.create_user(
+            email=data["email"],
+            password=data["password"],
+            rut=data["rut"],
+            name=data["name"]
+        )
+
+        return user
 
     @staticmethod
     def save_user(user):
-        pass
+        user.save()
+
+        return user
 
     @staticmethod
     def get_or_create_medical_profile(user):
-        pass
-        
+        profile, created = MedicalProfile.objects.get_or_create(
+            user=user
+        )
+
+        return profile
+
     @staticmethod
     def save_medical_profile(profile):
-        pass
+        profile.save()
+
+        return profile
