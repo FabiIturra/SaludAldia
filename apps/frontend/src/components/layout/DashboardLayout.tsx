@@ -65,7 +65,7 @@ export default function DashboardLayout() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-medium truncate">
-              {user?.firstName} {user?.lastName}
+              {user?.name}
             </p>
             {user?.rut && (
               <p className="text-primary-text text-[10px]">RUT {user.rut}</p>

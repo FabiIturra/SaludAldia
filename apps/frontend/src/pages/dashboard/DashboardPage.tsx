@@ -33,7 +33,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
             Bienvenido de nuevo,{" "}
-            <span className="text-primary-mid">{user?.firstName || "Usuario"}</span>
+            <span className="text-primary-mid">{user?.name || "Usuario"}</span>
           </h1>
           <p className="text-sm text-gray-400 mt-1">
             Aquí está el resumen de tu actividad médica reciente.
