@@ -57,7 +57,11 @@ class UserRepository:
     @staticmethod
     def get_or_create_medical_profile(user):
         profile, created = MedicalProfile.objects.get_or_create(
-            user=user
+            user=user,
+            defaults={
+                "first_name": "",
+                "last_name": "",
+            }
         )
 
         return profile
