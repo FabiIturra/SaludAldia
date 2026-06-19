@@ -28,13 +28,23 @@ export default {
         },
           // Paleta principal del proyecto basada en el mockup
           primary: {
-          dark:   "#204e4e",
-          mid:    "#316b6c",
+          dark:   "#004D4D",
+          mid:    "#219292",
           accent: "#4a9a9b",
           text:   "#7ecfcf",
           subtle: "#b2e4e4",
           light:  "#e0f4f4",
         },
+        categoria: {
+          documentos:    "#008A8A",
+          examenes:      "#4A90E2",
+          licencias:     "#B24AF2",
+          recetas:       "#F2994A",
+          documentosBg:  "#E0F4F4",
+          examenesBg:    "#EBF3FC",
+          licenciasBg:   "#F5EAFE",
+          recetasBg:     "#FEF3EA",
+       },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

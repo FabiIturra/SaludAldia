@@ -21,9 +21,12 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = await api.post("/auth/login/", data);
-      setUser(res.data.user, res.data.access);
-      toast.success(`Bienvenido, ${res.data.user.firstName}`);
+      await api.post("/auth/login/", data);
+      
+      // Obtener datos del usuario
+      const meRes = await api.get(`/auth/me/?email=${data.email}`);
+      setUser(meRes.data.user);
+      toast.success(`Bienvenido, ${meRes.data.user.name}`);
       navigate("/");
     } catch {
       toast.error("Correo o contraseña incorrectos");

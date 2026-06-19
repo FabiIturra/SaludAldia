@@ -1,0 +1,502 @@
+{
+  "info": {
+    "_postman_id": "476c9973-a69f-4513-8a19-50ee8b69eec0",
+    "name": "Saludaldia",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "44411688"
+  },
+  "item": [
+    {
+      "name": "01 - Register user",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const suffix = Date.now().toString().slice(-7);",
+              "pm.collectionVariables.set(\"test_email\", `test${suffix}@email.com`);",
+              "pm.collectionVariables.set(\"test_rut\", `${suffix}K`);",
+              "pm.collectionVariables.set(\"test_name\", \"Usuario Prueba\");",
+              "pm.collectionVariables.set(\"test_password\", \"Password1!\");",
+              "pm.collectionVariables.set(\"new_password\", \"Password2!\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Response has status success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql(\"success\");",
+              "});",
+              "pm.test(\"Response contains user object\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property(\"user\");",
+              "    pm.expect(json.user.email).to.eql(pm.collectionVariables.get(\"test_email\"));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"name\": \"{{test_name}}\", \"email\": \"{{test_email}}\", \"rut\": \"{{test_rut}}\", \"password\": \"{{test_password}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register",
+            ""
+          ]
+        },
+        "description": "Generated from cURL: curl -X POST \"{{base_url}}/api/auth/register/\" -H \"Content-Type: application/json\" -d '{ \"name\": \"{{test_name}}\", \"email\": \"{{test_email}}\", \"rut\": \"{{test_rut}}\", \"password\": \"{{test_password}}\" }'"
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Login user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has status success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql(\"success\");",
+              "});",
+              "pm.test(\"Response contains user object\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property(\"user\");",
+              "    pm.expect(json.user.email).to.eql(pm.collectionVariables.get(\"test_email\"));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"{{test_email}}\", \"password\": \"{{test_password}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login",
+            ""
+          ]
+        },
+        "description": "Generated from cURL: curl -X POST \"{{base_url}}/api/auth/login/\" -H \"Content-Type: application/json\" -d '{ \"email\": \"{{test_email}}\", \"password\": \"{{test_password}}\" }'"
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Password reset request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has status success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql(\"success\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"{{test_email}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/password-reset/request/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "password-reset",
+            "request",
+            ""
+          ]
+        },
+        "description": "Generated from cURL: curl -X POST \"{{base_url}}/api/auth/password-reset/request/\" -H \"Content-Type: application/json\" -d '{ \"email\": \"{{test_email}}\" }'"
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Password reset confirm",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has status success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql(\"success\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"{{test_email}}\", \"new_password\": \"{{new_password}}\", \"confirm_password\": \"{{new_password}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/password-reset/confirm/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "password-reset",
+            "confirm",
+            ""
+          ]
+        },
+        "description": "Generated from cURL: curl -X POST \"{{base_url}}/api/auth/password-reset/confirm/\" -H \"Content-Type: application/json\" -d '{ \"email\": \"{{test_email}}\", \"new_password\": \"{{new_password}}\", \"confirm_password\": \"{{new_password}}\" }'"
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Login with new password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response has status success\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql(\"success\");",
+              "});",
+              "pm.test(\"Response contains user object\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property(\"user\");",
+              "    pm.expect(json.user.email).to.eql(pm.collectionVariables.get(\"test_email\"));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"{{test_email}}\", \"password\": \"{{new_password}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login",
+            ""
+          ]
+        },
+        "description": "Generated from cURL: curl -X POST \"{{base_url}}/api/auth/login/\" -H \"Content-Type: application/json\" -d '{ \"email\": \"{{test_email}}\", \"password\": \"{{new_password}}\" }'"
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Get current user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "})",
+              "",
+              "pm.test('Status is success', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.status).to.eql('success');",
+              "})",
+              "",
+              "pm.test('User exists in response', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.have.property('user');",
+              "})"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/auth/me/?email={{test_email}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me",
+            ""
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{test_email}}"
+            }
+          ]
+        },
+        "description": "Generated from cURL: curl --request GET --url '{{base_url}}/api/auth/me/?email={{test_email}}'"
+      },
+      "response": []
+    },
+    {
+      "name": "07 - Get medical profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "})",
+              "",
+              "pm.test('Status is success', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.status).to.eql('success');",
+              "})",
+              "",
+              "pm.test('Profile exists in response', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json).to.have.property('profile');",
+              "})"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/auth/profile/?email={{test_email}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "profile",
+            ""
+          ],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{test_email}}"
+            }
+          ]
+        },
+        "description": "Generated from cURL: curl --request GET --url '{{base_url}}/api/auth/profile/?email={{test_email}}'"
+      },
+      "response": []
+    },
+    {
+      "name": "08 - Update medical profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "})",
+              "",
+              "pm.test('Status is success', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.status).to.eql('success');",
+              "})",
+              "",
+              "pm.test('Profile first_name is Usuario', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.profile.first_name).to.eql('Usuario');",
+              "})",
+              "",
+              "pm.test('Profile last_name is Prueba', function () {",
+              "    var json = pm.response.json();",
+              "    pm.expect(json.profile.last_name).to.eql('Prueba');",
+              "})"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"{{test_email}}\",\r\n  \"first_name\": \"Usuario\",\r\n  \"last_name\": \"Prueba\",\r\n  \"birthdate\": \"2000-01-01\",\r\n  \"genre\": \"Masculino\",\r\n  \"blood_type\": \"O+\",\r\n  \"weight\": 80,\r\n  \"height\": 175,\r\n  \"profile_image\": \"\",\r\n  \"allergies\": \"Ninguna\",\r\n  \"chronic_conditions\": \"Ninguna\",\r\n  \"emergency_contact_name\": \"Contacto Prueba\",\r\n  \"emergency_contact_phone\": \"+56912345678\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"first_name\": \"Usuario\",\n  \"last_name\": \"Prueba\",\n  \"birthdate\": \"2000-01-01\",\n  \"genre\": \"Masculino\",\n  \"blood_type\": \"O+\",\n  \"weight\": 80,\n  \"height\": 175,\n  \"profile_image\": \"\",\n  \"allergies\": \"Ninguna\",\n  \"chronic_conditions\": \"Ninguna\",\n  \"emergency_contact_name\": \"Contacto Prueba\",\n  \"emergency_contact_phone\": \"+56912345678\"\n}",
+          "host": [
+            "{\n  \"email\": \"{{test_email}}\",\n  \"first_name\": \"Usuario\",\n  \"last_name\": \"Prueba\",\n  \"birthdate\": \"2000-01-01\",\n  \"genre\": \"Masculino\",\n  \"blood_type\": \"O+\",\n  \"weight\": 80,\n  \"height\": 175,\n  \"profile_image\": \"\",\n  \"allergies\": \"Ninguna\",\n  \"chronic_conditions\": \"Ninguna\",\n  \"emergency_contact_name\": \"Contacto Prueba\",\n  \"emergency_contact_phone\""
+          ],
+          "port": " \"+56912345678\"\n}"
+        },
+        "description": "Generated from cURL: curl --request PUT --url '{{base_url}}/api/auth/profile/' --header 'Content-Type: application/json' --data '{\"email\":\"{{test_email}}\",\"first_name\":\"Usuario\",\"last_name\":\"Prueba\",\"birthdate\":\"2000-01-01\",\"genre\":\"Masculino\",\"blood_type\":\"O+\",\"weight\":80,\"height\":175,\"profile_image\":\"\",\"allergies\":\"Ninguna\",\"chronic_conditions\":\"Ninguna\",\"emergency_contact_name\":\"Contacto Prueba\",\"emergency_contact_phone\":\"+56912345678\"}'"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "test_email",
+      "value": ""
+    },
+    {
+      "key": "test_rut",
+      "value": ""
+    },
+    {
+      "key": "test_name",
+      "value": ""
+    },
+    {
+      "key": "test_password",
+      "value": ""
+    },
+    {
+      "key": "new_password",
+      "value": ""
+    }
+  ]
+}
