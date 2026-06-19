@@ -6,7 +6,7 @@ from .validators import UserValidator
 class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(required=True, min_length=10, max_length=60)
     email = serializers.EmailField(required=True)
-    rut = serializers.CharField(required=True, min_length=7, max_length=9)
+    rut = serializers.CharField(required=True, min_length=7, max_length=12)
     password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
 
     # la base que se usara, aqui crearemos las validaciones de entrada
