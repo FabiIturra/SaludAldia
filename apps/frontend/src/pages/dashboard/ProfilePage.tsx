@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { api } from "@/lib/api/client";
-import { Pencil, Calendar, User, Droplet, Weight, Ruler, Phone, Activity, Mail, MapPin, Heart } from "lucide-react";
+import { Pencil, Calendar, User, Droplet, Weight, Ruler, Phone, Activity, Mail, MapPin, Heart, Clock } from "lucide-react";
 
 interface MedicalProfile {
   first_name: string;
@@ -64,11 +64,11 @@ export default function ProfilePage() {
       </div>
 
       {/* Tarjeta principal */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-md p-6 mb-4">
         <div className="flex gap-6">
 
           {/* Avatar + nombre + contacto */}
-          <div className="flex items-start gap-4 flex-1 border-r border-gray-100 pr-6">
+          <div className="flex items-start gap-4 flex-1 border-r border-gray-300 pr-6">
             <div className="w-20 h-20 rounded-full bg-primary-mid flex items-center justify-center text-white text-2xl font-semibold flex-shrink-0">
               {profile?.first_name?.[0]}{profile?.last_name?.[0]}
             </div>
@@ -78,15 +78,21 @@ export default function ProfilePage() {
               </h2>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Mail size={14} strokeWidth={2.5} className="text-primary-mid" />
+                  <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Mail size={14} strokeWidth={2.5} className="text-blue-600" />
+                  </div>
                   <span>{user?.email || "—"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Phone size={14} strokeWidth={2.5} className="text-primary-mid" />
+                  <div className="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                    <Phone size={14} strokeWidth={2.5} className="text-green-600" />
+                  </div>
                   <span className="text-gray-400">No registrado</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <MapPin size={14} strokeWidth={2.5} className="text-primary-mid" />
+                  <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <MapPin size={14} strokeWidth={2.5} className="text-blue-600" />
+                  </div>
                   <span className="text-gray-400">No registrada</span>
                 </div>
               </div>
@@ -94,9 +100,11 @@ export default function ProfilePage() {
           </div>
 
           {/* Información clínica relevante */}
-          <div className="flex-1 border-l border-gray-100 pl-6">
+          <div className="flex-1  border-gray-400 pl-3">
             <div className="flex items-center gap-2 mb-3">
-              <Heart size={15} strokeWidth={2.5}className="text-primary-mid" />
+              <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+                <Heart size={15} strokeWidth={2.5} className="text-primary-mid" />
+              </div>
               <p className="text-sm font-medium text-gray-700">Información clínica relevante</p>
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -120,7 +128,7 @@ export default function ProfilePage() {
 
           {/* Grupo sanguíneo */}
           {profile?.blood_type && (
-            <div className="flex flex-col items-center justify-center border-l border-gray-100 pl-6 min-w-24">
+            <div className="flex flex-col items-center justify-center border-l border-gray-300 pl-6 min-w-24">
             <div className="bg-red-50 rounded-xl p-3 flex flex-col items-center">
               <Droplet size={20} strokeWidth={2.5} className="text-red-400 mb-1" />
               <p className="text-xs text-gray-500">Grupo sanguíneo</p>
@@ -135,9 +143,11 @@ export default function ProfilePage() {
       <div className="grid grid-cols-3 gap-4 mb-4">
 
         {/* Información personal */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
-            <User size={15} className="text-primary-mid" />
+            <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+              <User size={15} strokeWidth={2.5} className="text-primary-mid" />
+            </div>
             <p className="text-sm font-medium text-gray-700">Información personal</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -175,25 +185,31 @@ export default function ProfilePage() {
         </div>
 
         {/* Contacto de emergencia */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Phone size={15} strokeWidth={2.5}className="text-primary-mid" />
+            <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+              <Phone size={15} strokeWidth={2.5} className="text-primary-mid" />
+            </div>
             <p className="text-sm font-medium text-gray-700">Contacto de emergencia</p>
           </div>
           {profile?.emergency_contact_name ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-primary-mid text-xs font-semibold">
+                <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center text-primary-mid text-xs font-semibold flex-shrink-0">
                   {profile.emergency_contact_name[0]}
                 </div>
                 <p className="text-sm font-medium text-gray-900">{profile.emergency_contact_name}</p>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Phone size={13} strokeWidth={2.5}className="text-primary-mid" />
+                <div className="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                  <Phone size={13} strokeWidth={2.5} className="text-green-600" />
+                </div>
                 <span>{profile.emergency_contact_phone || "—"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Mail size={13} strokeWidth={2.5} className="text-primary-mid" />
+                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <Mail size={13} strokeWidth={2.5} className="text-blue-600" />
+                </div>
                 <span className="text-gray-400">No registrado</span>
               </div>
             </div>
@@ -203,9 +219,11 @@ export default function ProfilePage() {
         </div>
 
         {/* Medicamentos actuales */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Activity size={15} strokeWidth={2.5} className="text-primary-mid" />
+            <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+              <Activity size={15} strokeWidth={2.5} className="text-primary-mid" />
+            </div>
             <p className="text-sm font-medium text-gray-700">Medicamentos actuales</p>
           </div>
           <p className="text-sm text-gray-400">Sin medicamentos registrados</p>
@@ -217,10 +235,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Historial clínico reciente */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-md p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Activity size={15} strokeWidth={2.5} className="text-primary-mid" />
+            <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+              <Clock size={15} strokeWidth={2.5} className="text-primary-mid" />
+            </div>
             <p className="text-sm font-medium text-gray-700">Historial clínico reciente</p>
           </div>
           <button className="text-xs text-primary-mid hover:underline flex items-center gap-1">
