@@ -1,6 +1,49 @@
+import uuid
+from pathlib import Path
+
+from django.conf import settings
 from rest_framework import serializers
+from supabase import create_client
 
 from .repositories import DocumentRepository, DocumentCategoryRepository
+
+
+class DocumentStorageService:
+    @staticmethod
+    def build_file_key(user, category, uploaded_file):
+        extension = Path(uploaded_file.name).suffix.lower()
+        return f"{user.id}/{category.slug}/{uuid.uuid4()}{extension}"
+
+    @staticmethod
+    def upload_file(user, category, uploaded_file):
+        bucket_name = category.slug
+        file_key = DocumentStorageService.build_file_key(user, category, uploaded_file)
+
+        if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_KEY:
+            raise serializers.ValidationError({
+                "storage": "Supabase Storage no esta configurado."
+            })
+
+        client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_KEY)
+        bucket = client.storage.from_(bucket_name)
+        uploaded_file.seek(0)
+        bucket.upload(
+            file_key,
+            uploaded_file.read(),
+            {
+                "content-type": uploaded_file.content_type,
+                "upsert": "false",
+            },
+        )
+
+        return {
+            "bucket_name": bucket_name,
+            "file_key": file_key,
+            "file_url": None,
+            "mime_type": uploaded_file.content_type,
+            "file_size_bytes": uploaded_file.size,
+            "extracted_text": "",
+        }
 
 
 class DocumentService:
@@ -37,18 +80,51 @@ class DocumentService:
                 "user": "El usuario no existe."
             })
 
+        data = data.copy()
+        uploaded_file = data.pop("file", None)
+        if uploaded_file is None:
+            raise serializers.ValidationError({
+                "file": "Debe adjuntar un archivo."
+            })
+
         category_id = data.pop("category_id", None)
+        if category_id is None:
+            raise serializers.ValidationError({
+                "category_id": "La categoria es obligatoria."
+            })
 
-        if category_id:
-            category = DocumentCategoryRepository.get_by_id(category_id)
+        specialty = data.pop("specialty", "")
+        is_favorite = data.pop("is_favorite", False)
+        data["issuing_institution"] = data.pop("medical_center", "")
+        data["issuing_professional"] = data.pop("doctor_name", "")
+        data["ai_metadata"] = {
+            "specialty": specialty,
+            "is_favorite": is_favorite,
+        }
 
-            if not DocumentService.validate_category_exists(category):
-                raise serializers.ValidationError({
-                    "category_id": "La categoria indicada no existe."
-                })
+        category = DocumentCategoryRepository.get_by_id(category_id)
 
-            data["category"] = category
+        if not DocumentService.validate_category_exists(category):
+            raise serializers.ValidationError({
+                "category_id": "La categoria indicada no existe."
+            })
 
+        data["category"] = category
+
+        storage_data = DocumentStorageService.upload_file(
+            user=user,
+            category=category,
+            uploaded_file=uploaded_file,
+        )
+
+        data["file_key"] = storage_data["file_key"]
+        data["file_url"] = storage_data["file_url"]
+        data["mime_type"] = storage_data["mime_type"]
+        data["file_size_bytes"] = storage_data["file_size_bytes"]
+        data["ai_metadata"]["storage"] = {
+            "bucket_name": storage_data["bucket_name"],
+            "extracted_text": storage_data["extracted_text"],
+        }
         data["user"] = user
 
         return DocumentRepository.create_document(data)
@@ -60,7 +136,23 @@ class DocumentService:
                 "document": "El documento no existe."
             })
 
+        data = data.copy()
         category_id = data.pop("category_id", None)
+        metadata = document.ai_metadata or {}
+
+        if "medical_center" in data:
+            data["issuing_institution"] = data.pop("medical_center")
+
+        if "doctor_name" in data:
+            data["issuing_professional"] = data.pop("doctor_name")
+
+        if "specialty" in data:
+            metadata["specialty"] = data.pop("specialty")
+
+        if "is_favorite" in data:
+            metadata["is_favorite"] = data.pop("is_favorite")
+
+        data["ai_metadata"] = metadata
 
         if category_id:
             category = DocumentCategoryRepository.get_by_id(category_id)

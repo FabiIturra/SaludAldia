@@ -1,76 +1,99 @@
+from pathlib import Path
+
+from rest_framework import serializers
+
+
 class DocumentValidator:
+    MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+    ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".webp"}
+    ALLOWED_MIME_TYPES = {
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    }
 
     @staticmethod
     def validate_file_required(file):
-        # validar archivo obligatorio
-        pass
+        if file is None:
+            raise serializers.ValidationError("Debe adjuntar un archivo.")
 
     @staticmethod
     def validate_file_size(file):
-        # validar tamano de archivo
-        pass
+        if file and file.size > DocumentValidator.MAX_FILE_SIZE_BYTES:
+            raise serializers.ValidationError("El archivo no puede superar los 10 MB.")
 
     @staticmethod
     def validate_file_extension(file):
-        # validar extension de archivo
-        pass
+        if not file:
+            return
+
+        extension = Path(file.name).suffix.lower()
+        if extension not in DocumentValidator.ALLOWED_EXTENSIONS:
+            raise serializers.ValidationError(
+                "Formato no permitido. Use PDF, JPG, PNG o WEBP."
+            )
 
     @staticmethod
     def validate_mime_type(file):
-        # validar mime type
-        pass
+        if not file:
+            return
+
+        if file.content_type not in DocumentValidator.ALLOWED_MIME_TYPES:
+            raise serializers.ValidationError("Tipo de archivo no permitido.")
 
     @staticmethod
     def validate_file_name(file):
-        # validar nombre de archivo
-        pass
+        if file and len(file.name) > 180:
+            raise serializers.ValidationError("El nombre del archivo es demasiado largo.")
 
     @staticmethod
     def validate_title(title):
-        # validar titulo
-        pass
+        if not title or not title.strip():
+            raise serializers.ValidationError("El titulo es obligatorio.")
 
     @staticmethod
     def validate_doc_type(doc_type):
-        # validar tipo de documento
-        pass
+        valid_types = {"exam", "prescription", "sick_leave", "report", "vaccine", "other"}
+        if doc_type not in valid_types:
+            raise serializers.ValidationError("Tipo de documento no valido.")
 
     @staticmethod
     def validate_document_date(document_date):
-        # validar fecha del documento
-        pass
+        return document_date
 
     @staticmethod
     def validate_document_date_not_future(document_date):
-        # validar fecha no futura
-        pass
+        from django.utils import timezone
+
+        if document_date and document_date > timezone.localdate():
+            raise serializers.ValidationError(
+                "La fecha del documento no puede ser futura."
+            )
 
     @staticmethod
     def validate_medical_center(medical_center):
-        # validar centro medico
-        pass
+        if medical_center and len(medical_center) > 255:
+            raise serializers.ValidationError("El centro medico es demasiado largo.")
 
     @staticmethod
     def validate_specialty(specialty):
-        # validar especialidad
-        pass
+        if specialty and len(specialty) > 100:
+            raise serializers.ValidationError("La especialidad es demasiado larga.")
 
     @staticmethod
     def validate_doctor_name(doctor_name):
-        # validar nombre del medico
-        pass
+        if doctor_name and len(doctor_name) > 255:
+            raise serializers.ValidationError("El nombre del medico es demasiado largo.")
 
     @staticmethod
     def validate_is_favorite(is_favorite):
-        # validar favorito
-        pass
+        return bool(is_favorite)
 
     @staticmethod
     def validate_category_id(category_id):
-        # validar categoria
-        pass
+        return category_id
 
     @staticmethod
     def validate_metadata(data):
-        # validar metadata general
-        pass
+        return data

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   Download,
@@ -10,14 +10,25 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import documentsRobot from "@/assets/img/robot.png";
 import documentsSecurity from "@/assets/img/fondo-seguridad.png";
 import iconExam from "@/assets/img/icono-examenes.png";
 import iconPrescription from "@/assets/img/icono-recetas.png";
 import iconLicense from "@/assets/img/icono-licencias.png";
+import { api } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/store/auth.store";
 
 type DocumentGroup = "Examenes" | "Recetas Medicas" | "Certificados";
 type DocumentType = "EXAMENES" | "RECETA" | "LICENCIA";
+type ApiDocumentType =
+  | "exam"
+  | "prescription"
+  | "sick_leave"
+  | "report"
+  | "vaccine"
+  | "other"
+  | DocumentType;
 type TabOption = "TODOS" | "EXAMENES" | "RECETA" | "LICENCIA";
 type FilterOption = "favorites" | "center" | "specialty" | "doctor" | null;
 type SortOption = "newest" | "oldest" | "name";
@@ -27,7 +38,7 @@ type SupabaseDocumentRecord = {
   user_id: string;
   category_id: string | null;
   title: string;
-  doc_type: DocumentType;
+  doc_type: ApiDocumentType;
   file_key: string;
   file_url: string | null;
   mime_type: string | null;
@@ -38,6 +49,10 @@ type SupabaseDocumentRecord = {
   ai_metadata: Record<string, unknown> | null;
   created_at: string;
   deleted_at: string | null;
+  medical_center?: string | null;
+  specialty?: string | null;
+  doctor_name?: string | null;
+  is_favorite?: boolean;
 };
 
 type MedicalDocument = {
@@ -62,6 +77,13 @@ type MedicalDocument = {
   createdAt: string;
   deletedAt: string | null;
   aiMetadata: Record<string, unknown> | null;
+};
+
+type DocumentCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
 };
 
 const TABS: TabOption[] = ["TODOS", "EXAMENES", "RECETA", "LICENCIA"];
@@ -246,16 +268,32 @@ function getMetadataBoolean(
   return metadata?.[key] === true;
 }
 
-function getDocumentGroup(type: DocumentType): DocumentGroup {
-  if (type === "RECETA") return "Recetas Medicas";
-  if (type === "LICENCIA") return "Certificados";
+function normalizeDocumentType(type: ApiDocumentType): DocumentType {
+  if (type === "prescription" || type === "RECETA") return "RECETA";
+  if (type === "sick_leave" || type === "LICENCIA") return "LICENCIA";
+  return "EXAMENES";
+}
+
+function getDocumentGroup(type: ApiDocumentType): DocumentGroup {
+  const normalizedType = normalizeDocumentType(type);
+  if (normalizedType === "RECETA") return "Recetas Medicas";
+  if (normalizedType === "LICENCIA") return "Certificados";
   return "Examenes";
 }
 
-function getDocumentIcon(type: DocumentType) {
-  if (type === "RECETA") return iconPrescription;
-  if (type === "LICENCIA") return iconLicense;
+function getDocumentIcon(type: ApiDocumentType) {
+  const normalizedType = normalizeDocumentType(type);
+  if (normalizedType === "RECETA") return iconPrescription;
+  if (normalizedType === "LICENCIA") return iconLicense;
   return iconExam;
+}
+
+function getDocTypeByCategory(category: DocumentCategory): ApiDocumentType {
+  const slug = category.slug.toLowerCase();
+  if (slug.includes("receta")) return "prescription";
+  if (slug.includes("licencia") || slug.includes("certificado")) return "sick_leave";
+  if (slug.includes("examen")) return "exam";
+  return "other";
 }
 
 function mapSupabaseDocument(record: SupabaseDocumentRecord): MedicalDocument {
@@ -264,14 +302,19 @@ function mapSupabaseDocument(record: SupabaseDocumentRecord): MedicalDocument {
     id: record.id,
     group: getDocumentGroup(record.doc_type),
     title: record.title,
-    type: record.doc_type,
+    type: normalizeDocumentType(record.doc_type),
     date: formatDate(record.document_date),
     isoDate: record.document_date ?? record.created_at.slice(0, 10),
     icon: getDocumentIcon(record.doc_type),
-    center: record.issuing_institution ?? "Sin centro medico",
-    specialty: getMetadataText(record.ai_metadata, "specialty", "Sin especialidad"),
-    doctor: record.issuing_professional ?? "Sin medico",
-    favorite: getMetadataBoolean(record.ai_metadata, "favorite"),
+    center: record.medical_center ?? record.issuing_institution ?? "Sin centro medico",
+    specialty:
+      record.specialty ??
+      getMetadataText(record.ai_metadata, "specialty", "Sin especialidad"),
+    doctor: record.doctor_name ?? record.issuing_professional ?? "Sin medico",
+    favorite:
+      record.is_favorite ??
+      getMetadataBoolean(record.ai_metadata, "is_favorite") ??
+      getMetadataBoolean(record.ai_metadata, "favorite"),
     summary: getMetadataText(
       record.ai_metadata,
       "summary",
@@ -328,7 +371,12 @@ function downloadDocument(document: MedicalDocument) {
 }
 
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const user = useAuthStore((state) => state.user);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [documents, setDocuments] = useState<MedicalDocument[]>([]);
+  const [categories, setCategories] = useState<DocumentCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabOption>("TODOS");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [pendingSortBy, setPendingSortBy] = useState<SortOption>("newest");
@@ -337,6 +385,46 @@ export default function DocumentsPage() {
   const [openMenu, setOpenMenu] = useState<"filter" | "sort" | null>(null);
   const [selectedDocument, setSelectedDocument] =
     useState<MedicalDocument | null>(null);
+
+  useEffect(() => {
+    const loadDocuments = async () => {
+      if (!user?.email) {
+        setDocuments(INITIAL_DOCUMENTS);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const response = await api.get("/documents/", {
+          params: { email: user.email },
+        });
+        const apiDocuments = response.data.documents ?? [];
+        setDocuments(apiDocuments.map(mapSupabaseDocument));
+      } catch (error) {
+        console.error("Error al cargar documentos:", error);
+        setDocuments(INITIAL_DOCUMENTS);
+        toast.error("No se pudieron cargar documentos reales. Mostrando datos de ejemplo.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDocuments();
+  }, [user?.email]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await api.get("/documents/categories/");
+        setCategories(response.data.categories ?? []);
+      } catch (error) {
+        console.error("Error al cargar categorias:", error);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const groupedDocuments = useMemo(() => {
     // Aplica tab, filtro, orden y agrupacion para renderizar la lista final.
@@ -360,16 +448,83 @@ export default function DocumentsPage() {
     })).filter((group) => group.documents.length > 0);
   }, [activeTab, documents, filterBy, sortBy]);
 
-  const handleDeleteDocument = (documentId: string) => {
+  const handleDeleteDocument = async (documentId: string) => {
     const shouldDelete = window.confirm(
       "Estas seguro de que quieres eliminar este documento?"
     );
 
     if (!shouldDelete) return;
 
-    setDocuments((currentDocuments) =>
-      currentDocuments.filter((document) => document.id !== documentId)
+    try {
+      if (user?.email) {
+        await api.delete(`/documents/${documentId}/`, {
+          params: { email: user.email },
+        });
+      }
+
+      setDocuments((currentDocuments) =>
+        currentDocuments.filter((document) => document.id !== documentId)
+      );
+      toast.success("Documento eliminado correctamente.");
+    } catch (error) {
+      console.error("Error al eliminar documento:", error);
+      toast.error("No se pudo eliminar el documento.");
+    }
+  };
+
+  const handleUploadDocument = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!user?.email) {
+      toast.error("Debes iniciar sesion para subir documentos.");
+      return;
+    }
+
+    const title = window.prompt("Nombre del documento", file.name);
+    if (!title) return;
+
+    if (categories.length === 0) {
+      toast.error("No hay categorias disponibles para subir documentos.");
+      return;
+    }
+
+    const categoryOptions = categories
+      .map((category, index) => `${index + 1}. ${category.name}`)
+      .join("\n");
+    const categoryIndex = Number(
+      window.prompt(`Selecciona categoria:\n${categoryOptions}`, "1")
     );
+    const selectedCategory = categories[categoryIndex - 1];
+
+    if (!selectedCategory) {
+      toast.error("Categoria no valida.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("email", user.email);
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("category_id", selectedCategory.id);
+    formData.append("doc_type", getDocTypeByCategory(selectedCategory));
+
+    try {
+      setIsUploading(true);
+      const response = await api.post("/documents/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const createdDocument = mapSupabaseDocument(response.data.document);
+      setDocuments((currentDocuments) => [createdDocument, ...currentDocuments]);
+      toast.success("Documento subido correctamente.");
+    } catch (error) {
+      console.error("Error al subir documento:", error);
+      toast.error("No se pudo subir el documento.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleShareDocument = async (document: MedicalDocument) => {
@@ -400,11 +555,28 @@ export default function DocumentsPage() {
           </p>
         </div>
 
-        <button className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-mid px-7 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png,.webp"
+          onChange={handleUploadDocument}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-mid px-7 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <Plus size={17} />
-          Subir documentos
+          {isUploading ? "Subiendo..." : "Subir documentos"}
         </button>
       </section>
+
+      {isLoading && (
+        <div className="mb-4 rounded-lg border border-primary-light bg-white px-4 py-3 text-sm text-gray-600">
+          Cargando documentos...
+        </div>
+      )}
 
       {/* Tabs: cambian rapidamente entre todos los documentos y sus tipos principales. */}
       <section className="mb-5 w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
