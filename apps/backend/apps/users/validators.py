@@ -56,28 +56,43 @@ class UserValidator:
 
     @staticmethod
     def validate_rut_format(rut):
-        # primero normalizamos el rut para validar siempre el mismo formato
+        if "-" not in rut:
+            raise serializers.ValidationError("El RUT debe incluir un guion (ej: 12345678-9).")
+
+        if len(rut) < 10 or len(rut) > 12:
+            raise serializers.ValidationError("El RUT debe tener entre 10 y 12 caracteres.")
+
+        if "." in rut:
+            raise serializers.ValidationError("El RUT no debe contener puntos.")
+
         rut = UserValidator.normalize_run(rut)
-
-        # valida largo del rut ya normalizado, sin puntos ni guion
-        if len(rut) < 7 or len(rut) > 9:
-            raise serializers.ValidationError("El RUT debe de tener entre 7 y 9 caracteres")
-
-        # rut[:-1] toma todo menos el ultimo caracter
-        # ejemplo: 12345678K -> 12345678
-        body = rut[:1]
-
-        # rut[-1] toma solo el ultimo caracter
-        # ejemplo: 12345678K -> K
+        body = rut[:-1]
         verifier = rut[-1]
 
-        # isdigit() valida que todos los caracteres sean numeros
         if not body.isdigit():
-            raise serializers.ValidationError("El cuerpo del RUT debe contener solo numeros.")
+            raise serializers.ValidationError("El cuerpo del RUT debe contener solo números.")
 
-        # el digito verificador puede ser un numero o la letra K
         if not verifier.isdigit() and verifier != "K":
-            raise serializers.ValidationError("El digito verificador debe ser un numero o K.")
+            raise serializers.ValidationError("El dígito verificador debe ser un número o K.")
+
+        total = 0
+        multiplier = 2
+        for digit in reversed(body):
+            total += int(digit) * multiplier
+            multiplier = multiplier + 1 if multiplier < 7 else 2
+        remainder = total % 11
+        result = 11 - remainder
+        if result == 11:
+            expected = "0"
+        elif result == 10:
+            expected = "K"
+        else:
+            expected = str(result)
+
+        if verifier != expected:
+            raise serializers.ValidationError(
+                f"El dígito verificador no es válido. Debería ser {expected}."
+            )
 
         return rut
 
