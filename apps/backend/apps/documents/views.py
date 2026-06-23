@@ -3,66 +3,28 @@ from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
-# ──────────────────────────────────────────────
-# Views nuevas (plantilla MVP)
-# ──────────────────────────────────────────────
+# views base del modulo documents
 
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 def documents_view(request):
-    # GET: listar documentos del usuario
-    # POST: crear/subir documento
+    # get: listar documentos del usuario
+    # post: crear o subir documento
     pass
 
 
-@api_view(["DELETE"])
+@api_view(["GET", "PUT", "DELETE"])
 @permission_classes([AllowAny])
 def document_detail_view(request, document_id):
-    # DELETE: eliminar documento del usuario mediante soft delete
+    # get: obtener detalle del documento
+    # put: actualizar metadata del documento
+    # delete: eliminar documento con soft delete
     pass
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def document_categories_view(request):
-    # GET: listar categorias de documentos
-    pass
-
-# Stubs temporales requeridos por urls.py actual
-# TODO: eliminar cuando se actualice urls.py
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def health(request):
-    pass
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def document_list(request):
-    pass
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def document_create(request):
-    pass
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def document_detail(request, document_id):
-    pass
-
-
-@api_view(["PUT"])
-@permission_classes([AllowAny])
-def document_update(request, document_id):
-    pass
-
-
-@api_view(["DELETE"])
-@permission_classes([AllowAny])
-def document_delete(request, document_id):
+    # get: listar categorias de documentos
     pass
