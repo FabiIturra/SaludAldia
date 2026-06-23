@@ -1,14 +1,14 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/lib/store/auth.store";
 import { UserCircle,LayoutDashboard, FolderOpen, User, Sparkles, Settings, LogOut, Bell, HelpCircle, Search, } from "lucide-react";
-
+import logoWhite from "@/assets/img/logo-white.png";
 
 const NAV = [
   { path: "/",            label: "Panel principal", icon: LayoutDashboard },
   { path: "/documents",   label: "Mis documentos",  icon: FolderOpen },
   { path: "/profile",     label: "Perfil médico",   icon: User },
   { path: "/ai-insights", label: "Análisis IA",     icon: Sparkles },
-  { path: "/profile",     label: "Configuración",   icon: Settings },
+  { path: "/settings",     label: "Configuración",   icon: Settings },
 ];
 
 const FOOTER_LINKS = ["Privacidad", "Términos de Uso", "Contacto", "Ayuda"];
@@ -25,16 +25,11 @@ export default function DashboardLayout() {
       <aside className="w-52 flex flex-col flex-shrink-0 min-h-screen" style={{ background: "linear-gradient(to bottom, var(--color-primary-dark), var(--color-primary-mid))" }}>
 
         {/* Logo */}
-        <div className="p-4 border-b border-primary-mid flex items-center gap-2">
-          <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center font-bold text-xs text-primary-dark">
-            S..
-          </div>
-          <div>
-            <p className="text-white text-sm font-semibold leading-none">Saludaldia</p>
-            <p className="text-primary-text text-[9px] uppercase tracking-wide mt-0.5">
-              Historial médico digital
-            </p>
-          </div>
+        <div className="p-4 border-b border-primary-mid flex flex-col items-center gap-1">
+          <img src={logoWhite} alt="Saludaldia" className="w-20 h-16 object-contain" />
+          <p className="text-primary-text text-[10px] uppercase tracking-wide text-center">
+            Historial médico digital
+          </p>
         </div>
 
         {/* Navegación */}
