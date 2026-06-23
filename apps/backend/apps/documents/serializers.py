@@ -18,6 +18,8 @@ class CreateDocumentSerializer(serializers.Serializer):
     # file
     pass
 
+class UpdateDocumentSerializer(serializers.Serializer):
+    pass
 
 class DocumentCategorySerializer(serializers.Serializer):
     # TODO: serializar categorias de documentos

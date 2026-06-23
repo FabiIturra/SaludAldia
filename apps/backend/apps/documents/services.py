@@ -54,6 +54,30 @@ class DocumentService:
         return DocumentRepository.create_document(data)
 
     @staticmethod
+    def update_document(document, data):
+        if not DocumentService.validate_document_exists(document):
+            raise serializers.ValidationError({
+                "document": "El documento no existe."
+            })
+
+        category_id = data.pop("category_id", None)
+
+        if category_id:
+            category = DocumentCategoryRepository.get_by_id(category_id)
+
+            if not DocumentService.validate_category_exists(category):
+                raise serializers.ValidationError({
+                    "category_id": "La categoria indicada no existe."
+                })
+
+            data["category"] = category
+
+        for field, value in data.items():
+            setattr(document, field, value)
+
+        return DocumentRepository.save_document(document)
+
+    @staticmethod
     def delete_document(document):
         if not DocumentService.validate_document_exists(document):
             raise serializers.ValidationError({
