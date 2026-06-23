@@ -66,7 +66,7 @@ export default function DashboardPage() {
           {/* Tarjetas de resumen */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {STATS.map(({ label, value, icono, border }) => (
-            <div key={label} className={`bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-gray-100 border-b-4 ${border}`}>
+            <div key={label} className={`bg-white rounded-xl shadow-md p-4 flex flex-col items-center gap-2 border border-gray-100 border-b-4 ${border}`}>
               <img src={icono} alt={label} className="w-12 h-12 object-contain" />
               <p className="text-2xl font-semibold text-gray-900">{value}</p>
               <p className="text-sm text-gray-400">{label}</p>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Tabla de documentos */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-md p-4">
 
             {/* Tabs */}
             <div className="flex gap-2 mb-4">
@@ -130,7 +130,7 @@ export default function DashboardPage() {
         <div className="w-64 flex-shrink-0 flex flex-col gap-4 self-start">
 
           {/* Consejo del día */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 min-h-70">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-md p-4 min-h-70">
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb size={18} className="text-yellow-400" />
               <p className="text-sm font-medium text-gray-700">Consejo de hoy</p>
