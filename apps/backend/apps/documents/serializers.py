@@ -28,6 +28,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "specialty",
             "doctor_name",
             "is_favorite",
+            "bucket_name",
             "file_key",
             "file_url",
             "mime_type",
