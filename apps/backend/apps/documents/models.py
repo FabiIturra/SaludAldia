@@ -107,6 +107,25 @@ class Document(models.Model):
         blank=True
     )
 
+    specialty = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+    favorito = models.BooleanField(
+        default=False
+    )
+    bucket_name = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        default="documents"
+    )
+    extracted_text = models.TextField(
+        null=True,
+        blank=True
+    )
+
     # metadatos generados por analisis de ia
     ai_metadata = models.JSONField(
         null=True,

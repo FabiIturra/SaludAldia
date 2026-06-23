@@ -82,7 +82,12 @@ class MedicalProfileSerializer(serializers.ModelSerializer):
             "chronic_conditions",
             "emergency_contact_name",
             "emergency_contact_phone",
+            "emergency_contact_relationship",
             "updated_at",
+            "address",
+            "relevance_type",
+            "current_medications",
+            "recent_medical_history",
         ]
         read_only_fields = [
             "updated_at",

@@ -18,6 +18,14 @@ class DocumentRepository:
             id=document_id,
             deleted_at__isnull=True
         ).first()
+    
+    @staticmethod
+    def get_by_id_and_user(document_id, user):
+        return Document.objects.filter(
+            id=document_id,
+            user=user,
+            deleted_at__isnull=True
+        ).first()
 
     @staticmethod
     def create_document(data):
