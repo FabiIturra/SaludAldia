@@ -22,6 +22,24 @@ type TabOption = "TODOS" | "EXAMENES" | "RECETA" | "LICENCIA";
 type FilterOption = "favorites" | "center" | "specialty" | "doctor" | null;
 type SortOption = "newest" | "oldest" | "name";
 
+type SupabaseDocumentRecord = {
+  id: string;
+  user_id: string;
+  category_id: string | null;
+  title: string;
+  doc_type: DocumentType;
+  file_key: string;
+  file_url: string | null;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  document_date: string | null;
+  issuing_institution: string | null;
+  issuing_professional: string | null;
+  ai_metadata: Record<string, unknown> | null;
+  created_at: string;
+  deleted_at: string | null;
+};
+
 type MedicalDocument = {
   id: string;
   group: DocumentGroup;
@@ -35,6 +53,15 @@ type MedicalDocument = {
   doctor: string;
   favorite: boolean;
   summary: string;
+  userId: string;
+  categoryId: string | null;
+  fileKey: string;
+  fileUrl: string | null;
+  mimeType: string | null;
+  fileSizeBytes: number | null;
+  createdAt: string;
+  deletedAt: string | null;
+  aiMetadata: Record<string, unknown> | null;
 };
 
 const TABS: TabOption[] = ["TODOS", "EXAMENES", "RECETA", "LICENCIA"];
@@ -54,91 +81,134 @@ const SORT_OPTIONS = [
   { label: "De la A-Z", value: "name" },
 ] satisfies { label: string; value: SortOption }[];
 
-const INITIAL_DOCUMENTS: MedicalDocument[] = [
-  // Datos mock iniciales; luego pueden reemplazarse por la respuesta del backend.
+const MOCK_SUPABASE_DOCUMENTS: SupabaseDocumentRecord[] = [
+  // Datos mock alineados a la tabla real de Supabase: documents.
+  // Cuando exista el endpoint, esta constante se reemplaza por el GET del backend.
   {
     id: "perfil-lipidico",
-    group: "Examenes",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Perfil Lipidico",
-    type: "EXAMENES",
-    date: "08 Oct 2024",
-    isoDate: "2024-10-08",
-    icon: iconExam,
-    center: "Red Salud",
-    specialty: "Laboratorio clinico",
-    doctor: "Dr. Andres Medina",
-    favorite: true,
-    summary: "Examen de colesterol total, HDL, LDL y trigliceridos.",
+    doc_type: "EXAMENES",
+    file_key: "documents/demo-user-id/perfil-lipidico.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 248000,
+    document_date: "2024-10-08",
+    issuing_institution: "Red Salud",
+    issuing_professional: "Dr. Andres Medina",
+    ai_metadata: {
+      specialty: "Laboratorio clinico",
+      favorite: true,
+      summary: "Examen de colesterol total, HDL, LDL y trigliceridos.",
+    },
+    created_at: "2024-10-08T12:00:00Z",
+    deleted_at: null,
   },
   {
     id: "hemograma-completo",
-    group: "Examenes",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Hemograma Completo",
-    type: "EXAMENES",
-    date: "07 Oct 2024",
-    isoDate: "2024-10-07",
-    icon: iconExam,
-    center: "Red Salud",
-    specialty: "Laboratorio clinico",
-    doctor: "Dra. Camila Flores",
-    favorite: false,
-    summary: "Analisis de globulos rojos, blancos, plaquetas y hematocrito.",
+    doc_type: "EXAMENES",
+    file_key: "documents/demo-user-id/hemograma-completo.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 192000,
+    document_date: "2024-10-07",
+    issuing_institution: "Red Salud",
+    issuing_professional: "Dra. Camila Flores",
+    ai_metadata: {
+      specialty: "Laboratorio clinico",
+      favorite: false,
+      summary: "Analisis de globulos rojos, blancos, plaquetas y hematocrito.",
+    },
+    created_at: "2024-10-07T12:00:00Z",
+    deleted_at: null,
   },
   {
     id: "resonancia-magnetica",
-    group: "Examenes",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Resonancia Magnetica",
-    type: "EXAMENES",
-    date: "12 Sep 2024",
-    isoDate: "2024-09-12",
-    icon: iconExam,
-    center: "Integramedica",
-    specialty: "Imagenologia",
-    doctor: "Dr. Nicolas Fuentes",
-    favorite: false,
-    summary: "Estudio de imagen para control y seguimiento medico.",
+    doc_type: "EXAMENES",
+    file_key: "documents/demo-user-id/resonancia-magnetica.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 1580000,
+    document_date: "2024-09-12",
+    issuing_institution: "Integramedica",
+    issuing_professional: "Dr. Nicolas Fuentes",
+    ai_metadata: {
+      specialty: "Imagenologia",
+      favorite: false,
+      summary: "Estudio de imagen para control y seguimiento medico.",
+    },
+    created_at: "2024-09-12T12:00:00Z",
+    deleted_at: null,
   },
   {
     id: "gripe-estacional-receta",
-    group: "Recetas Medicas",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Gripe Estacional - Receta",
-    type: "RECETA",
-    date: "03 Jun 2024",
-    isoDate: "2024-06-03",
-    icon: iconPrescription,
-    center: "Red Salud",
-    specialty: "Medicina general",
-    doctor: "Dra. Valentina Rojas",
-    favorite: false,
-    summary: "Indicaciones de tratamiento para sintomas gripales.",
+    doc_type: "RECETA",
+    file_key: "documents/demo-user-id/gripe-estacional-receta.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 126000,
+    document_date: "2024-06-03",
+    issuing_institution: "Red Salud",
+    issuing_professional: "Dra. Valentina Rojas",
+    ai_metadata: {
+      specialty: "Medicina general",
+      favorite: false,
+      summary: "Indicaciones de tratamiento para sintomas gripales.",
+    },
+    created_at: "2024-06-03T12:00:00Z",
+    deleted_at: null,
   },
   {
     id: "control-hipertension",
-    group: "Recetas Medicas",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Control Hipertension",
-    type: "RECETA",
-    date: "25 Jun 2024",
-    isoDate: "2024-06-25",
-    icon: iconPrescription,
-    center: "Integramedica",
-    specialty: "Cardiologia",
-    doctor: "Dra. Paula Herrera",
-    favorite: true,
-    summary: "Receta e indicaciones para control mensual de hipertension.",
+    doc_type: "RECETA",
+    file_key: "documents/demo-user-id/control-hipertension.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 141000,
+    document_date: "2024-06-25",
+    issuing_institution: "Integramedica",
+    issuing_professional: "Dra. Paula Herrera",
+    ai_metadata: {
+      specialty: "Cardiologia",
+      favorite: true,
+      summary: "Receta e indicaciones para control mensual de hipertension.",
+    },
+    created_at: "2024-06-25T12:00:00Z",
+    deleted_at: null,
   },
   {
     id: "licencia-3-dias",
-    group: "Certificados",
+    user_id: "demo-user-id",
+    category_id: null,
     title: "Licencia Medica - 3 dias",
-    type: "LICENCIA",
-    date: "23 May 2024",
-    isoDate: "2024-05-23",
-    icon: iconLicense,
-    center: "Dr. Hector Valenzuela",
-    specialty: "Medicina general",
-    doctor: "Dr. Hector Valenzuela",
-    favorite: false,
-    summary: "Reposo indicado por 3 dias por cuadro respiratorio agudo.",
+    doc_type: "LICENCIA",
+    file_key: "documents/demo-user-id/licencia-3-dias.pdf",
+    file_url: null,
+    mime_type: "application/pdf",
+    file_size_bytes: 97000,
+    document_date: "2024-05-23",
+    issuing_institution: "Dr. Hector Valenzuela",
+    issuing_professional: "Dr. Hector Valenzuela",
+    ai_metadata: {
+      specialty: "Medicina general",
+      favorite: false,
+      summary: "Reposo indicado por 3 dias por cuadro respiratorio agudo.",
+    },
+    created_at: "2024-05-23T12:00:00Z",
+    deleted_at: null,
   },
 ];
 
@@ -147,6 +217,79 @@ const GROUP_ORDER: DocumentGroup[] = [
   "Recetas Medicas",
   "Certificados",
 ];
+
+function formatDate(isoDate: string | null) {
+  if (!isoDate) return "Sin fecha";
+
+  return new Intl.DateTimeFormat("es-CL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })
+    .format(new Date(`${isoDate}T00:00:00`))
+    .replace(".", "");
+}
+
+function getMetadataText(
+  metadata: SupabaseDocumentRecord["ai_metadata"],
+  key: string,
+  fallback: string
+) {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function getMetadataBoolean(
+  metadata: SupabaseDocumentRecord["ai_metadata"],
+  key: string
+) {
+  return metadata?.[key] === true;
+}
+
+function getDocumentGroup(type: DocumentType): DocumentGroup {
+  if (type === "RECETA") return "Recetas Medicas";
+  if (type === "LICENCIA") return "Certificados";
+  return "Examenes";
+}
+
+function getDocumentIcon(type: DocumentType) {
+  if (type === "RECETA") return iconPrescription;
+  if (type === "LICENCIA") return iconLicense;
+  return iconExam;
+}
+
+function mapSupabaseDocument(record: SupabaseDocumentRecord): MedicalDocument {
+  // Adaptador entre la tabla documents y el modelo que necesita la interfaz.
+  return {
+    id: record.id,
+    group: getDocumentGroup(record.doc_type),
+    title: record.title,
+    type: record.doc_type,
+    date: formatDate(record.document_date),
+    isoDate: record.document_date ?? record.created_at.slice(0, 10),
+    icon: getDocumentIcon(record.doc_type),
+    center: record.issuing_institution ?? "Sin centro medico",
+    specialty: getMetadataText(record.ai_metadata, "specialty", "Sin especialidad"),
+    doctor: record.issuing_professional ?? "Sin medico",
+    favorite: getMetadataBoolean(record.ai_metadata, "favorite"),
+    summary: getMetadataText(
+      record.ai_metadata,
+      "summary",
+      "Documento medico guardado en Saludaldia."
+    ),
+    userId: record.user_id,
+    categoryId: record.category_id,
+    fileKey: record.file_key,
+    fileUrl: record.file_url,
+    mimeType: record.mime_type,
+    fileSizeBytes: record.file_size_bytes,
+    createdAt: record.created_at,
+    deletedAt: record.deleted_at,
+    aiMetadata: record.ai_metadata,
+  };
+}
+
+const INITIAL_DOCUMENTS = MOCK_SUPABASE_DOCUMENTS.map(mapSupabaseDocument);
 
 function sortDocuments(documents: MedicalDocument[], sortBy: SortOption) {
   return [...documents].sort((a, b) => {
@@ -157,6 +300,11 @@ function sortDocuments(documents: MedicalDocument[], sortBy: SortOption) {
 }
 
 function downloadDocument(document: MedicalDocument) {
+  if (document.fileUrl) {
+    window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+    return;
+  }
+
   const content = [
     "Saludaldia - Documento medico",
     `Titulo: ${document.title}`,
@@ -165,6 +313,7 @@ function downloadDocument(document: MedicalDocument) {
     `Centro medico: ${document.center}`,
     `Especialidad: ${document.specialty}`,
     `Medico: ${document.doctor}`,
+    `Archivo: ${document.fileKey}`,
     "",
     document.summary,
   ].join("\n");
@@ -221,6 +370,21 @@ export default function DocumentsPage() {
     setDocuments((currentDocuments) =>
       currentDocuments.filter((document) => document.id !== documentId)
     );
+  };
+
+  const handleShareDocument = async (document: MedicalDocument) => {
+    const shareText = document.fileUrl ?? document.title;
+
+    if (navigator.share) {
+      await navigator.share({
+        title: document.title,
+        text: document.summary,
+        url: document.fileUrl ?? window.location.href,
+      });
+      return;
+    }
+
+    await navigator.clipboard?.writeText(shareText);
   };
 
   return (
@@ -430,7 +594,7 @@ export default function DocumentsPage() {
                           <Download size={18} />
                         </button>
                         <button
-                          onClick={() => navigator.clipboard?.writeText(doc.title)}
+                          onClick={() => handleShareDocument(doc)}
                           className="transition hover:text-primary-mid"
                           aria-label="Compartir"
                         >
@@ -461,7 +625,7 @@ export default function DocumentsPage() {
 
         {/* Panel lateral: entrega ayudas contextuales y mensajes de seguridad. */}
         <aside className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-          {/* Consejo del dia: refuerza buenas practicas para mantener el historial al dia. */}
+          {/* Consejo del dia: refuerza buenas practicas para mantener el historial al dia, debe ir conectado a una ia que cambie dia a dia el consejo. */}
           <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
               <Lightbulb size={21} className="text-primary-mid" />
@@ -474,7 +638,7 @@ export default function DocumentsPage() {
               actualizado.
             </div>
             <div className="mt-4 flex justify-center">
-              {/* Imagen del robot: asset aprobado por diseno para esta tarjeta. */}
+              {/* Imagen del robot. */}
               <img
                 src={documentsRobot}
                 alt="Robot asistente de Saludaldia"
@@ -546,6 +710,18 @@ export default function DocumentsPage() {
               <div>
                 <dt className="font-semibold text-gray-500">Medico</dt>
                 <dd className="mt-1 text-gray-900">{selectedDocument.doctor}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-gray-500">Tipo de archivo</dt>
+                <dd className="mt-1 text-gray-900">
+                  {selectedDocument.mimeType ?? "Sin tipo registrado"}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-gray-500">Ruta del archivo</dt>
+                <dd className="mt-1 break-all text-gray-900">
+                  {selectedDocument.fileKey}
+                </dd>
               </div>
             </dl>
 
