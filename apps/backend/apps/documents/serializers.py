@@ -1,123 +1,28 @@
 from rest_framework import serializers
-from .models import Document
-
-
-class CreateDocumentSerializer(serializers.Serializer):
-    category_id = serializers.UUIDField(required=False)
-
-    title = serializers.CharField(
-        required=True,
-        max_length=255
-    )
-
-    doc_type = serializers.ChoiceField(
-        choices=Document.DocType.choices,
-        required=True
-    )
-
-    file_key = serializers.CharField(
-        required=True,
-        max_length=500
-    )
-
-    file_url = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-    mime_type = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-    file_size_bytes = serializers.IntegerField(
-        required=False
-    )
-
-    document_date = serializers.DateField(
-        required=False
-    )
-
-    issuing_institution = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-    issuing_professional = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-
-class UpdateDocumentSerializer(serializers.Serializer):
-
-    title = serializers.CharField(
-        required=False,
-        max_length=255
-    )
-
-    doc_type = serializers.ChoiceField(
-        choices=Document.DocType.choices,
-        required=False
-    )
-
-    document_date = serializers.DateField(
-        required=False
-    )
-
-    issuing_institution = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
-
-    issuing_professional = serializers.CharField(
-        required=False,
-        allow_blank=True
-    )
 
 
 class DocumentSerializer(serializers.Serializer):
-    id = serializers.UUIDField()
+    # todos los serializars document para el listado:
+    # campos esperados mas adelante:
+    # id, title, document_type, category, document_date
+    # medical_center, specialty, doctor_name, is_favorite
+    # file_key, file_url, mime_type, file_size_bytes
+    pass
 
-    title = serializers.CharField()
 
-    doc_type = serializers.CharField()
+class CreateDocumentSerializer(serializers.Serializer):
+    # todo los validar datos para crear/subir documento
+    # campos esperados mas adelante:
+    # title, document_type, category_id, document_date
+    # medical_center, specialty, doctor_name, is_favorite
+    # file
+    pass
 
-    file_key = serializers.CharField()
+class UpdateDocumentSerializer(serializers.Serializer):
+    pass
 
-    file_url = serializers.CharField(
-        allow_null=True,
-        required=False
-    )
-
-    mime_type = serializers.CharField(
-        allow_null=True,
-        required=False
-    )
-
-    file_size_bytes = serializers.IntegerField(
-        allow_null=True,
-        required=False
-    )
-
-    document_date = serializers.DateField(
-        allow_null=True,
-        required=False
-    )
-
-    issuing_institution = serializers.CharField(
-        allow_null=True,
-        required=False
-    )
-
-    issuing_professional = serializers.CharField(
-        allow_null=True,
-        required=False
-    )
-
-    ai_metadata = serializers.JSONField(
-        allow_null=True,
-        required=False
-    )
-
-    created_at = serializers.DateTimeField()
+class DocumentCategorySerializer(serializers.Serializer):
+    # TODO: serializar categorias de documentos
+    # campos esperados mas adelante:
+    # id, name, description
+    pass

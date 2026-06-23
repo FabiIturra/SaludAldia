@@ -126,7 +126,6 @@ CREATE TABLE "public"."temporary_access_links" (
     PRIMARY KEY ("id")
 );
 
-
 -- =========================================================
 -- indexes
 -- =========================================================
@@ -198,3 +197,15 @@ ALTER TABLE "public"."temporary_access_links"
 ADD CONSTRAINT "fk_temporary_access_links_user_id_users_id"
 FOREIGN KEY ("user_id")
 REFERENCES "public"."users" ("id");
+
+-- =========================================================
+-- insert into para document_categories
+-- con esta informacion se tendran los slugs
+-- =========================================================
+
+INSERT INTO 
+	document_categories (id, name, slug, icon)
+VALUES
+	(gen_random_uuid(), 'Recetas medicas', 'recetas-medicas', 'file-text'),
+	(gen_random_uuid(), 'Examenes', 'examenes', 'flask-conical'),
+	(gen_random_uuid(), 'Certificados', 'certificados', 'badge-check');
