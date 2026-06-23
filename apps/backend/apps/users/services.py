@@ -15,7 +15,7 @@ class UserService:
 
         if UserService.validate_rut_not_registered(rut):
             raise serializers.ValidationError({
-                "rut": "El RUT ya esta registrado."
+                "rut": "usuario ya registrado"
             })
 
         return UserRepository.create_user(data)
