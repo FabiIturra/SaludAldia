@@ -6,7 +6,7 @@ from .models import Document, DocumentCategory
 class DocumentCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentCategory
-        fields = ["id", "name", "description"]
+        fields = ["id", "name", "slug", "icon"]
         read_only_fields = ["id"]
 
 
@@ -27,7 +27,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "medical_center",
             "specialty",
             "doctor_name",
-            "is_favorite",
+            "favorite",
             "bucket_name",
             "file_key",
             "file_url",
@@ -47,12 +47,14 @@ class DocumentSerializer(serializers.ModelSerializer):
 class CreateDocumentSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=255)
     document_type = serializers.ChoiceField(
+        source="doc_type",
         choices=Document.DocType.choices,
         default=Document.DocType.OTHER,
     )
     category_id = serializers.UUIDField(required=False, allow_null=True)
     document_date = serializers.DateField(required=False, allow_null=True)
     medical_center = serializers.CharField(
+        source="issuing_institution",
         max_length=255,
         required=False,
         allow_blank=True,
@@ -63,15 +65,16 @@ class CreateDocumentSerializer(serializers.Serializer):
         allow_blank=True,
     )
     doctor_name = serializers.CharField(
+        source="issuing_professional",
         max_length=255,
         required=False,
         allow_blank=True,
     )
-    is_favorite = serializers.BooleanField(default=False)
+    favorite = serializers.BooleanField(default=False)
     file = serializers.FileField()
 
     def validate_category_id(self, value):
         if value is not None:
             if not DocumentCategory.objects.filter(id=value).exists():
-                raise serializers.ValidationError("Categoría no encontrada.")
+                raise serializers.ValidationError("Categoria no encontrada.")
         return value

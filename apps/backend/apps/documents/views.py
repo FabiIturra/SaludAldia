@@ -49,7 +49,7 @@ def documents_view(request):
                     "errors": serializer.errors
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            data = dict(request.data)
+            data = serializer.validated_data.copy()
             # aplanar listas de un solo elemento de multipart
             for key in data:
                 if isinstance(data[key], list) and len(data[key]) == 1:

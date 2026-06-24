@@ -86,12 +86,15 @@ class UserValidator:
             raise serializers.ValidationError("El digito verificador debe ser un numero o K.")
 
         # validar digito verificador con algoritmo modulo 11
+        # secuencia de multiplicadores: 2, 3, 4, 5, 6, 7, 2, 3...
+        # se aplica desde el ultimo digito del cuerpo hacia el primero
         total = 0
         multiplier = 2
         for digit in reversed(body):
             total += int(digit) * multiplier
             multiplier = multiplier + 1 if multiplier < 7 else 2
         remainder = total % 11
+        # resultado 11 equivale a dv "0", resultado 10 equivale a dv "K"
         result = 11 - remainder
         if result == 11:
             expected = "0"
