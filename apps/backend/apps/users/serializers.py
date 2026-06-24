@@ -10,8 +10,6 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, min_length=6, max_length=12, write_only=True)
 
     # la base que se usara, aqui crearemos las validaciones de entrada
-    def validate_email(self, value):
-        return value.strip()
 
     def validate_email(self, value):
         return UserValidator.validate_email_format(value)
@@ -67,6 +65,7 @@ class UserSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 class MedicalProfileSerializer(serializers.ModelSerializer):
+    imc = serializers.SerializerMethodField()
     class Meta:
         model = MedicalProfile
         fields = [
@@ -88,10 +87,18 @@ class MedicalProfileSerializer(serializers.ModelSerializer):
             "relevance_type",
             "current_medications",
             "recent_medical_history",
+            "favorite",
         ]
         read_only_fields = [
             "updated_at",
         ]
+
+    def get_imc(self, obj):
+        if obj.weight and obj.height:
+            height_in_meters = obj.height / 100
+            imc = obj.weight / (height_in_meters ** 2)
+            return round(imc, 2)
+        return None
 
     def validate_weight(self, value):
         if value is not None and value <= 0:

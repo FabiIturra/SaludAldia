@@ -112,11 +112,11 @@ class Document(models.Model):
         null=True,
         blank=True
     )
-    favorito = models.BooleanField(
+    favorite = models.BooleanField(
         default=False
     )
     bucket_name = models.CharField(
-        max_length=100,
+        max_length=150,
         null=True,
         blank=True,
         default="documents"
