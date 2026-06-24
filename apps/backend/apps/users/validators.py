@@ -1,7 +1,6 @@
 import re
 
 from rest_framework import serializers
-from unicodedata import normalize
 
 
 class UserValidator:
@@ -23,15 +22,25 @@ class UserValidator:
         if not rut:
             raise serializers.ValidationError("El rut es requerido")
 
-        # elimina espacios, deja la k en mayuscula y quita puntos/guion
+        # elimina espacios y deja la k en mayuscula
         rut = rut.strip().upper()
-        rut = rut.replace(".","")
-        rut = rut.replace("-","")
+
+        # rechazar puntos
+        if "." in rut:
+            raise serializers.ValidationError(
+                "El RUT no debe contener puntos."
+            )
+
+        # exigir exactamente un guion
+        if rut.count("-") != 1:
+            raise serializers.ValidationError(
+                "El RUT debe incluir un guion (ej: 12345678-9)."
+            )
 
         return rut
 
     # ------------------------
-    # valdiadores de logica
+    # validadores de logica
     # ------------------------
     @staticmethod
     def validate_email_format(email):
@@ -55,25 +64,28 @@ class UserValidator:
 
     @staticmethod
     def validate_rut_format(rut):
-        if "-" not in rut:
-            raise serializers.ValidationError("El RUT debe incluir un guion (ej: 12345678-9).")
-
-        if len(rut) < 10 or len(rut) > 12:
-            raise serializers.ValidationError("El RUT debe tener entre 10 y 12 caracteres.")
-
-        if "." in rut:
-            raise serializers.ValidationError("El RUT no debe contener puntos.")
-
+        # normalizar rut manteniendo guion
         rut = UserValidator.normalize_run(rut)
-        body = rut[:-1]
-        verifier = rut[-1]
+
+        # separar cuerpo y digito verificador por guion
+        body, verifier = rut.split("-")
+
+        # validar largo del cuerpo (7 a 8 digitos)
+        if len(body) < 7 or len(body) > 8:
+            raise serializers.ValidationError(
+                "El cuerpo del RUT debe tener entre 7 y 8 digitos."
+            )
 
         if not body.isdigit():
-            raise serializers.ValidationError("El cuerpo del RUT debe contener solo números.")
+            raise serializers.ValidationError("El cuerpo del RUT debe contener solo numeros.")
+
+        if len(verifier) != 1:
+            raise serializers.ValidationError("El digito verificador debe ser un solo caracter.")
 
         if not verifier.isdigit() and verifier != "K":
-            raise serializers.ValidationError("El dígito verificador debe ser un número o K.")
+            raise serializers.ValidationError("El digito verificador debe ser un numero o K.")
 
+        # validar digito verificador con algoritmo modulo 11
         total = 0
         multiplier = 2
         for digit in reversed(body):
@@ -90,49 +102,49 @@ class UserValidator:
 
         if verifier != expected:
             raise serializers.ValidationError(
-                f"El dígito verificador no es válido. Debería ser {expected}."
+                f"El digito verificador no es valido. Deberia ser {expected}."
             )
 
         return rut
 
     @staticmethod
     def validate_password_strength(password):
-        # valida que la contraseña no venga vacia
+        # valida que la contrasena no venga vacia
         if not password:
-            raise serializers.ValidationError("La contraseña es obligatoria.")
+            raise serializers.ValidationError("La contrasena es obligatoria.")
 
         # valida largo minimo
         if len(password) < 6:
-            raise serializers.ValidationError("La contraseña debe tener al menos 6 caracteres.")
+            raise serializers.ValidationError("La contrasena debe tener al menos 6 caracteres.")
 
         # valida largo maximo
         if len(password) > 12:
-            raise serializers.ValidationError("La contraseña no puede tener mas de 12 caracteres.")
+            raise serializers.ValidationError("La contrasena no puede tener mas de 12 caracteres.")
 
         # re.search busca si existe al menos una coincidencia con el patron indicado
         # [A-Z] valida que exista al menos una mayuscula
         if not re.search(r"[A-Z]", password):
-            raise serializers.ValidationError("La contraseña debe tener al menos una mayuscula.")
+            raise serializers.ValidationError("La contrasena debe tener al menos una mayuscula.")
 
         # [a-z] valida que exista al menos una minuscula
         if not re.search(r"[a-z]", password):
-            raise serializers.ValidationError("La contraseña debe tener al menos una minuscula.")
+            raise serializers.ValidationError("La contrasena debe tener al menos una minuscula.")
 
         # \d valida que exista al menos un numero
         if not re.search(r"\d", password):
-            raise serializers.ValidationError("La contraseña debe tener al menos un numero.")
+            raise serializers.ValidationError("La contrasena debe tener al menos un numero.")
 
         # [^\w\s] valida que exista al menos un signo o simbolo
         # es decir, algo que no sea letra, numero, guion bajo o espacio
         if not re.search(r"[^\w\s]", password):
-            raise serializers.ValidationError("La contraseña debe tener al menos un signo o simbolo.")
+            raise serializers.ValidationError("La contrasena debe tener al menos un signo o simbolo.")
 
         return password
 
     @staticmethod
     def validate_passwords_match(password, confirm_password):
-        # valida que ambas contraseñas sean iguales
+        # valida que ambas contrasenas sean iguales
         if password != confirm_password:
-            raise serializers.ValidationError("Las contraseñas no coinciden.")
+            raise serializers.ValidationError("Las contrasenas no coinciden.")
 
         return True
