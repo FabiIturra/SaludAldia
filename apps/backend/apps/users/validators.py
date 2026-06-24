@@ -24,7 +24,6 @@ class UserValidator:
             raise serializers.ValidationError("El rut es requerido")
 
         # elimina espacios, deja la k en mayuscula y quita puntos/guion
-        # ejemplo: 12.345.678-k -> 12345678K
         rut = rut.strip().upper()
         rut = rut.replace(".","")
         rut = rut.replace("-","")

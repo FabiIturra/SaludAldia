@@ -21,11 +21,6 @@ class DocumentCategory(models.Model):
         blank=True
     )
 
-    description = models.TextField(
-        null=True,
-        blank=True
-    )
-
     class Meta:
         db_table = "document_categories"
         managed = False  # tabla administrada manualmente desde schema.sql
@@ -118,7 +113,18 @@ class Document(models.Model):
         blank=True
     )
 
-    is_favorite = models.BooleanField(default=False)
+    favorite = models.BooleanField(default=False)
+
+    bucket_name = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True
+    )
+
+    extracted_text = models.TextField(
+        null=True,
+        blank=True
+    )
 
     # metadatos generados por analisis de ia
     ai_metadata = models.JSONField(
