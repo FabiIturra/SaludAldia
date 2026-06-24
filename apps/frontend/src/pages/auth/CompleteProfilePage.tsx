@@ -1,12 +1,65 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuthStore } from "@/lib/store/auth.store";
+import { updateProfile } from "@/lib/api/profile.api";
 import loginIllustration from "@/assets/img/login-illustration.png";
 import logoSaludaldia from "@/assets/logo/logo-saludaldia.png";
 import textoSaludaldia from "@/assets/logo/texto.png";
 
 export default function CompleteProfilePage() {
     const navigate = useNavigate();
+    const user = useAuthStore((s) => s.user);
     const [step, setStep] = useState(1);
+    const [saving, setSaving] = useState(false);
+
+    // campos paso 1
+    const [birthdate, setBirthdate] = useState("");
+    const [genre, setGenre] = useState("");
+    const [bloodType, setBloodType] = useState("");
+    const [weight, setWeight] = useState("");
+
+    // campos paso 2
+    const [allergies, setAllergies] = useState("Ninguna");
+    const [chronicConditions, setChronicConditions] = useState<string[]>([]);
+    const [otherCondition, setOtherCondition] = useState("");
+    const [currentMedications, setCurrentMedications] = useState("");
+
+    const toggleCondition = (item: string) => {
+        setChronicConditions((prev) =>
+            prev.includes(item) ? prev.filter((c) => c !== item) : [...prev, item]
+        );
+    };
+
+    const handleFinish = async () => {
+        if (!user?.email) {
+            toast.error("No se encontro el usuario");
+            return;
+        }
+        setSaving(true);
+        try {
+            const allConditions = [
+                ...chronicConditions,
+                ...(otherCondition.trim() ? [otherCondition.trim()] : []),
+            ].join(", ") || "Ninguna";
+
+            await updateProfile(user.email, {
+                birthdate: birthdate || undefined,
+                genre: genre || undefined,
+                blood_type: bloodType || undefined,
+                weight: weight ? Number(weight) : undefined,
+                allergies,
+                chronic_conditions: allConditions,
+                current_medications: currentMedications || undefined,
+            });
+            toast.success("Perfil completado correctamente");
+            navigate("/");
+        } catch {
+            toast.error("Error al guardar el perfil");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white px-4 py-4 md:py-6">
@@ -37,7 +90,7 @@ export default function CompleteProfilePage() {
                         <div className="my-6 flex justify-center">
                             <img
                                 src={loginIllustration}
-                                alt="Historial médico digital"
+                                alt="Historial medico digital"
                                 className="w-full max-w-[300px] object-contain"
                             />
                         </div>
@@ -98,6 +151,8 @@ export default function CompleteProfilePage() {
                                         </label>
                                         <input
                                             type="date"
+                                            value={birthdate}
+                                            onChange={(e) => setBirthdate(e.target.value)}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
                                         />
                                     </div>
@@ -106,8 +161,12 @@ export default function CompleteProfilePage() {
                                         <label className="mb-1 block text-sm font-medium text-gray-800">
                                             Sexo
                                         </label>
-                                        <select className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]">
-                                            <option>Selecciona</option>
+                                        <select
+                                            value={genre}
+                                            onChange={(e) => setGenre(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
+                                        >
+                                            <option value="">Selecciona</option>
                                             <option>Masculino</option>
                                             <option>Femenino</option>
                                             <option>Otro</option>
@@ -119,8 +178,12 @@ export default function CompleteProfilePage() {
                                         <label className="mb-1 block text-sm font-medium text-gray-800">
                                             Grupo sanguíneo
                                         </label>
-                                        <select className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]">
-                                            <option>Selecciona</option>
+                                        <select
+                                            value={bloodType}
+                                            onChange={(e) => setBloodType(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
+                                        >
+                                            <option value="">Selecciona</option>
                                             <option>O+</option>
                                             <option>O-</option>
                                             <option>A+</option>
@@ -139,6 +202,8 @@ export default function CompleteProfilePage() {
                                         <input
                                             type="number"
                                             placeholder="Kg"
+                                            value={weight}
+                                            onChange={(e) => setWeight(e.target.value)}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
                                         />
                                     </div>
@@ -177,7 +242,11 @@ export default function CompleteProfilePage() {
                                         <label className="mb-1 block text-sm font-medium text-gray-800">
                                             Alergias conocidas
                                         </label>
-                                        <select className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]">
+                                        <select
+                                            value={allergies}
+                                            onChange={(e) => setAllergies(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
+                                        >
                                             <option>Ninguna</option>
                                             <option>Medicamentos</option>
                                             <option>Alimentos</option>
@@ -199,6 +268,8 @@ export default function CompleteProfilePage() {
                                                     >
                                                         <input
                                                             type="checkbox"
+                                                            checked={chronicConditions.includes(item)}
+                                                            onChange={() => toggleCondition(item)}
                                                             className="h-4 w-4 rounded border-gray-300 text-[var(--brand-dark)] focus:ring-[var(--brand-mid)]"
                                                         />
                                                         {item}
@@ -215,6 +286,8 @@ export default function CompleteProfilePage() {
                                         <input
                                             type="text"
                                             placeholder="Escribe la enfermedad"
+                                            value={otherCondition}
+                                            onChange={(e) => setOtherCondition(e.target.value)}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
                                         />
                                     </div>
@@ -226,6 +299,8 @@ export default function CompleteProfilePage() {
                                         <input
                                             type="text"
                                             placeholder="Ej: Losartán 50mg, Levotiroxina 100mg"
+                                            value={currentMedications}
+                                            onChange={(e) => setCurrentMedications(e.target.value)}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand-mid)] focus:ring-2 focus:ring-[var(--brand-subtle)]"
                                         />
                                         <p className="mt-1 text-xs text-gray-500">
@@ -247,10 +322,11 @@ export default function CompleteProfilePage() {
                                     </button>
 
                                     <button
-                                        onClick={() => navigate("/")}
-                                        className="w-full rounded-lg bg-[var(--brand-dark)] py-2.5 font-medium text-white transition hover:bg-[var(--brand-mid)]"
+                                        onClick={handleFinish}
+                                        disabled={saving}
+                                        className="w-full rounded-lg bg-[var(--brand-dark)] py-2.5 font-medium text-white transition hover:bg-[var(--brand-mid)] disabled:opacity-60"
                                     >
-                                        Finalizar perfil
+                                        {saving ? "Guardando..." : "Finalizar perfil"}
                                     </button>
                                 </div>
                             </div>

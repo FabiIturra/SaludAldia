@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { api } from "@/lib/api/client";
+import { registerUser } from "@/lib/api/auth.api";
 import loginIllustration from "@/assets/img/login-illustration.png";
 import logoSaludaldia from "@/assets/logo/logo-saludaldia.png";
 import textoSaludaldia from "@/assets/logo/texto.png";
@@ -51,7 +51,7 @@ export default function SignupPage() {
     try {
       const { confirmPassword, terms, ...payload } = data;
 
-      await api.post("/auth/register/", payload);
+      await registerUser(payload);
 
       toast.success("Cuenta creada correctamente.");
       navigate("/complete-profile");

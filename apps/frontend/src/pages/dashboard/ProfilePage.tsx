@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/store/auth.store";
-import { api } from "@/lib/api/client";
+import { getProfile } from "@/lib/api/profile.api";
 import { Pencil, Calendar, User, Droplet, Weight, Ruler, Phone, Activity, Mail, MapPin, Heart, Clock } from "lucide-react";
 
 interface MedicalProfile {
@@ -16,6 +16,9 @@ interface MedicalProfile {
   chronic_conditions: string;
   emergency_contact_name: string;
   emergency_contact_phone: string;
+  address?: string;
+  current_medications?: string;
+  phone?: string;
 }
 
 function calcularEdad(birthdate: string): number {
@@ -35,8 +38,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get(`/auth/profile/?email=${user?.email}`);
-        setProfile(res.data.user);
+        const data = await getProfile(user!.email);
+        setProfile(data);
       } catch (err) {
         console.error("Error al cargar perfil:", err);
       } finally {
@@ -87,13 +90,13 @@ export default function ProfilePage() {
                   <div className="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
                     <Phone size={14} strokeWidth={2.5} className="text-green-600" />
                   </div>
-                  <span className="text-gray-400">No registrado</span>
+                  <span>{profile?.phone || "No registrado"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                     <MapPin size={14} strokeWidth={2.5} className="text-blue-600" />
                   </div>
-                  <span className="text-gray-400">No registrada</span>
+                  <span>{profile?.address || "No registrada"}</span>
                 </div>
               </div>
             </div>
@@ -226,7 +229,17 @@ export default function ProfilePage() {
             </div>
             <p className="text-sm font-medium text-gray-700">Medicamentos actuales</p>
           </div>
-          <p className="text-sm text-gray-400">Sin medicamentos registrados</p>
+          {profile?.current_medications && profile.current_medications !== "" ? (
+            <div className="flex flex-wrap gap-2">
+              {profile.current_medications.split(",").map((med, i) => (
+                <span key={i} className="px-3 py-1 bg-blue-100 text-blue-600 text-xs rounded-full font-medium">
+                  {med.trim()}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Sin medicamentos registrados</p>
+          )}
           <button className="flex items-center gap-1 text-xs text-primary-mid hover:underline mt-3">
             + Agregar medicamento
           </button>

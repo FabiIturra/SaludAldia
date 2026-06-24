@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { api } from "@/lib/api/client";
+import { loginUser, getMe } from "@/lib/api/auth.api";
 import { useAuthStore } from "@/lib/store/auth.store";
 import loginIllustration from "@/assets/img/login-illustration.png";
 import logoSaludaldia from "@/assets/logo/logo-saludaldia.png";
@@ -30,15 +30,13 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Paso 1: verificar credenciales
-      await api.post("/auth/login/", data);
-      // Paso 2: obtener datos del usuario desde /auth/me/
-      // El login no devuelve el objeto user por seguridad,
-      // por eso hacemos una segunda llamada con el email      
-      const meRes = await api.get(`/auth/me/?email=${data.email}`);
-      setUser(meRes.data.user);
+      // paso 1: verificar credenciales
+      await loginUser(data.email, data.password);
+      // paso 2: obtener datos del usuario
+      const user = await getMe(data.email);
+      setUser(user);
 
-      toast.success(`Bienvenido, ${meRes.data.user.name}`);
+      toast.success(`Bienvenido, ${user.name}`);
       navigate("/");
     } catch {
       toast.error("Correo o contraseña incorrectos");

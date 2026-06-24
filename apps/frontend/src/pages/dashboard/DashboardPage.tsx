@@ -1,6 +1,8 @@
 import { useAuthStore } from "@/lib/store/auth.store";
+import { getDocuments, mapApiDocType } from "@/lib/api/documents.api";
+import type { ApiMedicalDocument } from "@/lib/types/api.types";
 import { Share2, Upload, Lightbulb, ShieldCheck, Download, Share2 as ShareIcon, Eye, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import robotImg from "@/assets/img/robot.png";
 import fondoSeguridadImg from "@/assets/img/fondo-seguridad.png";
 import iconoDocumentos from "@/assets/img/icono-documentos.png";
@@ -8,31 +10,72 @@ import iconoExamenes from "@/assets/img/icono-examenes.png";
 import iconoLicencias from "@/assets/img/icono-licencias.png";
 import iconoRecetas from "@/assets/img/icono-recetas.png";
 
-const STATS = [
-  { label: "Exámenes",   value: 3, icono: iconoExamenes, color: "text-categoria-examenes",  border: "border-b-categoria-examenes"  },
-  { label: "Recetas",    value: 3, icono: iconoRecetas, color: "text-categoria-recetas",   border: "border-b-categoria-recetas"   },
-  { label: "Licencias",  value: 1, icono: iconoLicencias, color: "text-categoria-licencias", border: "border-b-categoria-licencias" },
-  { label: "Documentos", value: 7, icono: iconoDocumentos, color: "text-categoria-documentos",border: "border-b-categoria-documentos"},
-];
-
 const CATEGORIAS = ["Todos", "Examen", "Receta", "Licencia"];
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const [activeTab, setActiveTab] = useState("Todos");
+  const [apiDocs, setApiDocs] = useState<ApiMedicalDocument[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const DOCUMENTOS = [
-    { id: 1, nombre: "Hemograma completo", tipo: "Exámen",   fecha: "12 Oct 2024", icono: "🧪", color: "bg-categoria-examenesBg text-categoria-examenes" },
-    { id: 2, nombre: "Gripe",              tipo: "Receta",   fecha: "12 Oct 2024", icono: "💊", color: "bg-categoria-recetasBg text-categoria-recetas" },
-    { id: 3, nombre: "3 días",             tipo: "Licencia", fecha: "12 Oct 2024", icono: "📋", color: "bg-categoria-licenciasBg text-categoria-licencias" },
-    { id: 4, nombre: "Hemograma completo", tipo: "Exámen",   fecha: "05 Oct 2024", icono: "🧪", color: "bg-categoria-examenesBg text-categoria-examenes" },
-    { id: 5, nombre: "Gripe",              tipo: "Receta",   fecha: "01 Oct 2024", icono: "💊", color: "bg-categoria-recetasBg text-categoria-recetas" },
-    { id: 6, nombre: "Hemograma completo", tipo: "Exámen",   fecha: "28 Sep 2024", icono: "🧪", color: "bg-categoria-examenesBg text-categoria-examenes" },
-    { id: 7, nombre: "Gripe",              tipo: "Receta",   fecha: "20 Sep 2024", icono: "💊", color: "bg-purple-100 text-purple-600" },
+  useEffect(() => {
+    if (!user?.email) return;
+    setLoading(true);
+    getDocuments(user.email)
+      .then((docs) => setApiDocs(docs))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user?.email]);
+
+  // mapear tipo de la api a tipo visual
+  const typeToLabel = (t: string) => {
+    const mapped = mapApiDocType(t);
+    if (mapped === "EXAMENES") return "Examen";
+    if (mapped === "RECETA") return "Receta";
+    if (mapped === "LICENCIA") return "Licencia";
+    return t;
+  };
+
+  const typeToStyle = (t: string) => {
+    if (t === "EXAMENES") return { icono: "\ud83e\uddea", color: "bg-categoria-examenesBg text-categoria-examenes" };
+    if (t === "RECETA") return { icono: "\ud83d\udc8a", color: "bg-categoria-recetasBg text-categoria-recetas" };
+    if (t === "LICENCIA") return { icono: "\ud83d\udccb", color: "bg-categoria-licenciasBg text-categoria-licencias" };
+    return { icono: "\ud83d\udcc4", color: "bg-gray-100 text-gray-600" };
+  };
+
+  const formatDocDate = (d: string | null) => {
+    if (!d) return "Sin fecha";
+    return new Intl.DateTimeFormat("es-CL", { day: "2-digit", month: "short", year: "numeric" })
+      .format(new Date(d + "T00:00:00")).replace(".", "");
+  };
+
+  const DOCUMENTOS = apiDocs.map((doc, i) => ({
+    id: i + 1,
+    nombre: doc.title,
+    tipo: typeToLabel(doc.document_type),
+    fecha: formatDocDate(doc.document_date),
+    ...typeToStyle(doc.document_type),
+  }));
+
+  // calcular stats desde documentos reales
+  const examCount = apiDocs.filter((d) => ["exam", "report", "vaccine", "other"].includes(d.document_type)).length;
+  const recetaCount = apiDocs.filter((d) => d.document_type === "prescription").length;
+  const licenciaCount = apiDocs.filter((d) => d.document_type === "sick_leave").length;
+
+  const STATS = [
+    { label: "Exámenes", value: examCount, icono: iconoExamenes, color: "text-categoria-examenes", border: "border-b-categoria-examenes" },
+    { label: "Recetas", value: recetaCount, icono: iconoRecetas, color: "text-categoria-recetas", border: "border-b-categoria-recetas" },
+    { label: "Licencias", value: licenciaCount, icono: iconoLicencias, color: "text-categoria-licencias", border: "border-b-categoria-licencias" },
+    { label: "Documentos", value: apiDocs.length, icono: iconoDocumentos, color: "text-categoria-documentos", border: "border-b-categoria-documentos" },
   ];
 
   return (
     <div className="p-6">
+      {loading && (
+        <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+          Cargando datos...
+        </div>
+      )}
 
       {/* Bienvenida + botones */}
       <div className="flex items-start justify-between mb-6">
@@ -114,6 +157,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
+              {!loading && DOCUMENTOS.length === 0 && (
+                <div className="py-8 text-center text-sm text-gray-400">
+                  No hay documentos registrados
+                </div>
+              )}
             </div>
 
             {/* Ver historial completo */}

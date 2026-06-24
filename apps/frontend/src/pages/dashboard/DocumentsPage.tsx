@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   Download,
@@ -8,8 +8,13 @@ import {
   Share2,
   Star,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuthStore } from "@/lib/store/auth.store";
+import { getDocuments, deleteDocument, mapApiDocType, createDocument, getCategories } from "@/lib/api/documents.api";
+import type { ApiMedicalDocument, DocumentCategory } from "@/lib/types/api.types";
 import documentsRobot from "@/assets/img/robot.png";
 import documentsSecurity from "@/assets/img/fondo-seguridad.png";
 import iconExam from "@/assets/img/icono-examenes.png";
@@ -24,20 +29,18 @@ type SortOption = "newest" | "oldest" | "name";
 
 type SupabaseDocumentRecord = {
   id: string;
-  user_id: string;
-  category_id: string | null;
   title: string;
   doc_type: DocumentType;
+  document_date: string | null;
+  issuing_institution: string | null;
+  issuing_professional: string | null;
+  favorite: boolean;
+  specialty: string | null;
   file_key: string;
   file_url: string | null;
   mime_type: string | null;
   file_size_bytes: number | null;
-  document_date: string | null;
-  issuing_institution: string | null;
-  issuing_professional: string | null;
-  ai_metadata: Record<string, unknown> | null;
-  created_at: string;
-  deleted_at: string | null;
+  summary: string | null;
 };
 
 type MedicalDocument = {
@@ -53,15 +56,10 @@ type MedicalDocument = {
   doctor: string;
   favorite: boolean;
   summary: string;
-  userId: string;
-  categoryId: string | null;
   fileKey: string;
   fileUrl: string | null;
   mimeType: string | null;
   fileSizeBytes: number | null;
-  createdAt: string;
-  deletedAt: string | null;
-  aiMetadata: Record<string, unknown> | null;
 };
 
 const TABS: TabOption[] = ["TODOS", "EXAMENES", "RECETA", "LICENCIA"];
@@ -81,136 +79,6 @@ const SORT_OPTIONS = [
   { label: "De la A-Z", value: "name" },
 ] satisfies { label: string; value: SortOption }[];
 
-const MOCK_SUPABASE_DOCUMENTS: SupabaseDocumentRecord[] = [
-  // Datos mock alineados a la tabla real de Supabase: documents.
-  // Cuando exista el endpoint, esta constante se reemplaza por el GET del backend.
-  {
-    id: "perfil-lipidico",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Perfil Lipidico",
-    doc_type: "EXAMENES",
-    file_key: "documents/demo-user-id/perfil-lipidico.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 248000,
-    document_date: "2024-10-08",
-    issuing_institution: "Red Salud",
-    issuing_professional: "Dr. Andres Medina",
-    ai_metadata: {
-      specialty: "Laboratorio clinico",
-      favorite: true,
-      summary: "Examen de colesterol total, HDL, LDL y trigliceridos.",
-    },
-    created_at: "2024-10-08T12:00:00Z",
-    deleted_at: null,
-  },
-  {
-    id: "hemograma-completo",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Hemograma Completo",
-    doc_type: "EXAMENES",
-    file_key: "documents/demo-user-id/hemograma-completo.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 192000,
-    document_date: "2024-10-07",
-    issuing_institution: "Red Salud",
-    issuing_professional: "Dra. Camila Flores",
-    ai_metadata: {
-      specialty: "Laboratorio clinico",
-      favorite: false,
-      summary: "Analisis de globulos rojos, blancos, plaquetas y hematocrito.",
-    },
-    created_at: "2024-10-07T12:00:00Z",
-    deleted_at: null,
-  },
-  {
-    id: "resonancia-magnetica",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Resonancia Magnetica",
-    doc_type: "EXAMENES",
-    file_key: "documents/demo-user-id/resonancia-magnetica.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 1580000,
-    document_date: "2024-09-12",
-    issuing_institution: "Integramedica",
-    issuing_professional: "Dr. Nicolas Fuentes",
-    ai_metadata: {
-      specialty: "Imagenologia",
-      favorite: false,
-      summary: "Estudio de imagen para control y seguimiento medico.",
-    },
-    created_at: "2024-09-12T12:00:00Z",
-    deleted_at: null,
-  },
-  {
-    id: "gripe-estacional-receta",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Gripe Estacional - Receta",
-    doc_type: "RECETA",
-    file_key: "documents/demo-user-id/gripe-estacional-receta.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 126000,
-    document_date: "2024-06-03",
-    issuing_institution: "Red Salud",
-    issuing_professional: "Dra. Valentina Rojas",
-    ai_metadata: {
-      specialty: "Medicina general",
-      favorite: false,
-      summary: "Indicaciones de tratamiento para sintomas gripales.",
-    },
-    created_at: "2024-06-03T12:00:00Z",
-    deleted_at: null,
-  },
-  {
-    id: "control-hipertension",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Control Hipertension",
-    doc_type: "RECETA",
-    file_key: "documents/demo-user-id/control-hipertension.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 141000,
-    document_date: "2024-06-25",
-    issuing_institution: "Integramedica",
-    issuing_professional: "Dra. Paula Herrera",
-    ai_metadata: {
-      specialty: "Cardiologia",
-      favorite: true,
-      summary: "Receta e indicaciones para control mensual de hipertension.",
-    },
-    created_at: "2024-06-25T12:00:00Z",
-    deleted_at: null,
-  },
-  {
-    id: "licencia-3-dias",
-    user_id: "demo-user-id",
-    category_id: null,
-    title: "Licencia Medica - 3 dias",
-    doc_type: "LICENCIA",
-    file_key: "documents/demo-user-id/licencia-3-dias.pdf",
-    file_url: null,
-    mime_type: "application/pdf",
-    file_size_bytes: 97000,
-    document_date: "2024-05-23",
-    issuing_institution: "Dr. Hector Valenzuela",
-    issuing_professional: "Dr. Hector Valenzuela",
-    ai_metadata: {
-      specialty: "Medicina general",
-      favorite: false,
-      summary: "Reposo indicado por 3 dias por cuadro respiratorio agudo.",
-    },
-    created_at: "2024-05-23T12:00:00Z",
-    deleted_at: null,
-  },
-];
 
 const GROUP_ORDER: DocumentGroup[] = [
   "Examenes",
@@ -230,21 +98,7 @@ function formatDate(isoDate: string | null) {
     .replace(".", "");
 }
 
-function getMetadataText(
-  metadata: SupabaseDocumentRecord["ai_metadata"],
-  key: string,
-  fallback: string
-) {
-  const value = metadata?.[key];
-  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
-}
 
-function getMetadataBoolean(
-  metadata: SupabaseDocumentRecord["ai_metadata"],
-  key: string
-) {
-  return metadata?.[key] === true;
-}
 
 function getDocumentGroup(type: DocumentType): DocumentGroup {
   if (type === "RECETA") return "Recetas Medicas";
@@ -258,38 +112,46 @@ function getDocumentIcon(type: DocumentType) {
   return iconExam;
 }
 
+// mapper: convierte respuesta de api al formato interno
+function mapApiToRecord(doc: ApiMedicalDocument): SupabaseDocumentRecord {
+  return {
+    id: doc.id,
+    title: doc.title,
+    doc_type: mapApiDocType(doc.document_type),
+    document_date: doc.document_date,
+    issuing_institution: doc.medical_center,
+    issuing_professional: doc.doctor_name,
+    favorite: doc.favorite ?? false,
+    specialty: doc.specialty,
+    file_key: doc.file_key ?? "",
+    file_url: doc.file_url,
+    mime_type: doc.mime_type ?? null,
+    file_size_bytes: doc.file_size_bytes ?? null,
+    summary: doc.summary ?? null,
+  };
+}
+
 function mapSupabaseDocument(record: SupabaseDocumentRecord): MedicalDocument {
-  // Adaptador entre la tabla documents y el modelo que necesita la interfaz.
+  // adaptador entre record y el modelo que necesita la interfaz
   return {
     id: record.id,
     group: getDocumentGroup(record.doc_type),
     title: record.title,
     type: record.doc_type,
     date: formatDate(record.document_date),
-    isoDate: record.document_date ?? record.created_at.slice(0, 10),
+    isoDate: record.document_date ?? new Date().toISOString().slice(0, 10),
     icon: getDocumentIcon(record.doc_type),
     center: record.issuing_institution ?? "Sin centro medico",
-    specialty: getMetadataText(record.ai_metadata, "specialty", "Sin especialidad"),
+    specialty: record.specialty ?? "Sin especialidad",
     doctor: record.issuing_professional ?? "Sin medico",
-    favorite: getMetadataBoolean(record.ai_metadata, "favorite"),
-    summary: getMetadataText(
-      record.ai_metadata,
-      "summary",
-      "Documento medico guardado en Saludaldia."
-    ),
-    userId: record.user_id,
-    categoryId: record.category_id,
+    favorite: record.favorite,
+    summary: record.summary ?? "Documento medico guardado en Saludaldia.",
     fileKey: record.file_key,
     fileUrl: record.file_url,
     mimeType: record.mime_type,
     fileSizeBytes: record.file_size_bytes,
-    createdAt: record.created_at,
-    deletedAt: record.deleted_at,
-    aiMetadata: record.ai_metadata,
   };
 }
-
-const INITIAL_DOCUMENTS = MOCK_SUPABASE_DOCUMENTS.map(mapSupabaseDocument);
 
 function sortDocuments(documents: MedicalDocument[], sortBy: SortOption) {
   return [...documents].sort((a, b) => {
@@ -328,7 +190,10 @@ function downloadDocument(document: MedicalDocument) {
 }
 
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const user = useAuthStore((s) => s.user);
+  const [documents, setDocuments] = useState<MedicalDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabOption>("TODOS");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [pendingSortBy, setPendingSortBy] = useState<SortOption>("newest");
@@ -337,6 +202,88 @@ export default function DocumentsPage() {
   const [openMenu, setOpenMenu] = useState<"filter" | "sort" | null>(null);
   const [selectedDocument, setSelectedDocument] =
     useState<MedicalDocument | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadCategories, setUploadCategories] = useState<DocumentCategory[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    file: null as File | null,
+    title: "",
+    document_type: "",
+    category_id: "",
+    document_date: "",
+    medical_center: "",
+    specialty: "",
+    doctor_name: "",
+    favorite: false,
+  });
+
+  // funcion reutilizable para cargar documentos
+  const loadDocuments = () => {
+    if (!user?.email) return;
+    setLoading(true);
+    setError(null);
+    getDocuments(user.email)
+      .then((apiDocs) => {
+        const mapped = apiDocs.map(mapApiToRecord).map(mapSupabaseDocument);
+        setDocuments(mapped);
+      })
+      .catch(() => setError("Error al cargar documentos"))
+      .finally(() => setLoading(false));
+  };
+
+  // cargar documentos reales del backend
+  useEffect(() => {
+    loadDocuments();
+  }, [user?.email]);
+
+  // cargar categorias cuando se abre el modal de subida
+  useEffect(() => {
+    if (!showUploadModal) return;
+    getCategories()
+      .then((cats) => setUploadCategories(cats))
+      .catch(() => toast.error("Error al cargar categorias"));
+  }, [showUploadModal]);
+
+  const handleUploadSubmit = async () => {
+    if (!user?.email) return;
+    if (!uploadForm.file || !uploadForm.title || !uploadForm.document_type || !uploadForm.category_id) {
+      toast.error("Completa los campos obligatorios: archivo, titulo, tipo y categoria");
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadForm.file);
+      formData.append("title", uploadForm.title);
+      formData.append("document_type", uploadForm.document_type);
+      formData.append("category_id", uploadForm.category_id);
+      if (uploadForm.document_date) formData.append("document_date", uploadForm.document_date);
+      if (uploadForm.medical_center) formData.append("medical_center", uploadForm.medical_center);
+      if (uploadForm.specialty) formData.append("specialty", uploadForm.specialty);
+      if (uploadForm.doctor_name) formData.append("doctor_name", uploadForm.doctor_name);
+      if (uploadForm.favorite) formData.append("favorite", "true");
+
+      await createDocument(user.email, formData);
+      toast.success("Documento subido exitosamente");
+      setUploadForm({
+        file: null,
+        title: "",
+        document_type: "",
+        category_id: "",
+        document_date: "",
+        medical_center: "",
+        specialty: "",
+        doctor_name: "",
+        favorite: false,
+      });
+      setShowUploadModal(false);
+      loadDocuments();
+    } catch {
+      toast.error("Error al subir el documento");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const groupedDocuments = useMemo(() => {
     // Aplica tab, filtro, orden y agrupacion para renderizar la lista final.
@@ -360,16 +307,22 @@ export default function DocumentsPage() {
     })).filter((group) => group.documents.length > 0);
   }, [activeTab, documents, filterBy, sortBy]);
 
-  const handleDeleteDocument = (documentId: string) => {
+  const handleDeleteDocument = async (documentId: string) => {
     const shouldDelete = window.confirm(
       "Estas seguro de que quieres eliminar este documento?"
     );
 
-    if (!shouldDelete) return;
+    if (!shouldDelete || !user?.email) return;
 
-    setDocuments((currentDocuments) =>
-      currentDocuments.filter((document) => document.id !== documentId)
-    );
+    try {
+      await deleteDocument(documentId, user.email);
+      setDocuments((currentDocuments) =>
+        currentDocuments.filter((document) => document.id !== documentId)
+      );
+      toast.success("Documento eliminado");
+    } catch {
+      toast.error("Error al eliminar documento");
+    }
   };
 
   const handleShareDocument = async (document: MedicalDocument) => {
@@ -389,6 +342,18 @@ export default function DocumentsPage() {
 
   return (
     <div className="px-5 py-6 lg:px-8">
+      {/* estado de carga y error */}
+      {loading && (
+        <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+          Cargando documentos...
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {/* Encabezado: presenta la pagina y la accion principal de subir documentos. */}
       <section className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -400,7 +365,7 @@ export default function DocumentsPage() {
           </p>
         </div>
 
-        <button className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-mid px-7 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark">
+        <button onClick={() => setShowUploadModal(true)} className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-mid px-7 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark">
           <Plus size={17} />
           Subir documentos
         </button>
@@ -744,6 +709,164 @@ export default function DocumentsPage() {
                 className="rounded-lg bg-primary-mid px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark"
               >
                 Listo
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Modal de subida de documentos */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <section className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Subir documento</h2>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="rounded-full p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Archivo */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Archivo <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="file"
+                  onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files?.[0] ?? null })}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 file:mr-3 file:rounded-full file:border-0 file:bg-primary-mid file:px-4 file:py-1 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-dark focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Titulo */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Titulo <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={uploadForm.title}
+                  onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                  placeholder="Ej: Hemograma completo"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Tipo de documento */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Tipo de documento <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={uploadForm.document_type}
+                  onChange={(e) => setUploadForm({ ...uploadForm, document_type: e.target.value })}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                >
+                  <option value="">Seleccionar tipo</option>
+                  <option value="exam">Examen</option>
+                  <option value="prescription">Receta</option>
+                  <option value="sick_leave">Licencia medica</option>
+                  <option value="report">Informe medico</option>
+                  <option value="vaccine">Vacuna</option>
+                  <option value="other">Otro</option>
+                </select>
+              </div>
+
+              {/* Categoria */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  Categoria <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={uploadForm.category_id}
+                  onChange={(e) => setUploadForm({ ...uploadForm, category_id: e.target.value })}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                >
+                  <option value="">Seleccionar categoria</option>
+                  {uploadCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">Fecha del documento</label>
+                <input
+                  type="date"
+                  value={uploadForm.document_date}
+                  onChange={(e) => setUploadForm({ ...uploadForm, document_date: e.target.value })}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Centro medico */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">Centro medico</label>
+                <input
+                  type="text"
+                  value={uploadForm.medical_center}
+                  onChange={(e) => setUploadForm({ ...uploadForm, medical_center: e.target.value })}
+                  placeholder="Ej: Hospital Clinico UC"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Especialidad */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">Especialidad</label>
+                <input
+                  type="text"
+                  value={uploadForm.specialty}
+                  onChange={(e) => setUploadForm({ ...uploadForm, specialty: e.target.value })}
+                  placeholder="Ej: Cardiologia"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Medico */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">Medico</label>
+                <input
+                  type="text"
+                  value={uploadForm.doctor_name}
+                  onChange={(e) => setUploadForm({ ...uploadForm, doctor_name: e.target.value })}
+                  placeholder="Ej: Dr. Juan Perez"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[var(--brand-mid)] focus:outline-none"
+                />
+              </div>
+
+              {/* Favorito */}
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={uploadForm.favorite}
+                  onChange={(e) => setUploadForm({ ...uploadForm, favorite: e.target.checked })}
+                  className="h-4 w-4 rounded accent-primary-mid"
+                />
+                Marcar como favorito
+              </label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleUploadSubmit}
+                disabled={uploading}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary-mid px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:opacity-50"
+              >
+                <Upload size={16} />
+                {uploading ? "Subiendo..." : "Subir documento"}
               </button>
             </div>
           </section>
