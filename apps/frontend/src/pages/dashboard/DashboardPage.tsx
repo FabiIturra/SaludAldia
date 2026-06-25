@@ -1,12 +1,18 @@
 import { useAuthStore } from "@/lib/store/auth.store";
-import { Share2, Upload, FileText, FlaskConical, ClipboardList, FileCheck, Lightbulb, ShieldCheck, Download, Share2 as ShareIcon, Eye, Trash2 } from "lucide-react";
+import { Share2, Upload, Lightbulb, ShieldCheck, Download, Share2 as ShareIcon, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
+import robotImg from "@/assets/img/robot.png";
+import fondoSeguridadImg from "@/assets/img/fondo-seguridad.png";
+import iconoDocumentos from "@/assets/img/icono-documentos.png";
+import iconoExamenes from "@/assets/img/icono-examenes.png";
+import iconoLicencias from "@/assets/img/icono-licencias.png";
+import iconoRecetas from "@/assets/img/icono-recetas.png";
 
 const STATS = [
-  { label: "Exámenes",   value: 3, icon: FlaskConical,  color: "text-categoria-examenes",  border: "border-b-categoria-examenes"  },
-  { label: "Recetas",    value: 3, icon: ClipboardList, color: "text-categoria-recetas",   border: "border-b-categoria-recetas"   },
-  { label: "Licencias",  value: 1, icon: FileCheck,     color: "text-categoria-licencias", border: "border-b-categoria-licencias" },
-  { label: "Documentos", value: 7, icon: FileText,      color: "text-categoria-documentos",border: "border-b-categoria-documentos"},
+  { label: "Exámenes",   value: 3, icono: iconoExamenes, color: "text-categoria-examenes",  border: "border-b-categoria-examenes"  },
+  { label: "Recetas",    value: 3, icono: iconoRecetas, color: "text-categoria-recetas",   border: "border-b-categoria-recetas"   },
+  { label: "Licencias",  value: 1, icono: iconoLicencias, color: "text-categoria-licencias", border: "border-b-categoria-licencias" },
+  { label: "Documentos", value: 7, icono: iconoDocumentos, color: "text-categoria-documentos",border: "border-b-categoria-documentos"},
 ];
 
 const CATEGORIAS = ["Todos", "Examen", "Receta", "Licencia"];
@@ -59,17 +65,17 @@ export default function DashboardPage() {
 
           {/* Tarjetas de resumen */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {STATS.map(({ label, value, icon: Icon, color, border }) => (
-              <div key={label} className={`bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-gray-100 border-b-4 ${border}`}>
-                <Icon size={36} className={color} />
-                <p className="text-2xl font-semibold text-gray-900">{value}</p>
-                <p className="text-sm text-gray-400">{label}</p>
-              </div>
-            ))}
+            {STATS.map(({ label, value, icono, border }) => (
+            <div key={label} className={`bg-white rounded-xl shadow-md p-4 flex flex-col items-center gap-2 border border-gray-100 border-b-4 ${border}`}>
+              <img src={icono} alt={label} className="w-12 h-12 object-contain" />
+              <p className="text-2xl font-semibold text-gray-900">{value}</p>
+              <p className="text-sm text-gray-400">{label}</p>
+            </div>
+          ))}
           </div>
 
           {/* Tabla de documentos */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-md p-4">
 
             {/* Tabs */}
             <div className="flex gap-2 mb-4">
@@ -124,7 +130,7 @@ export default function DashboardPage() {
         <div className="w-64 flex-shrink-0 flex flex-col gap-4 self-start">
 
           {/* Consejo del día */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-md p-4 min-h-70">
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb size={18} className="text-yellow-400" />
               <p className="text-sm font-medium text-gray-700">Consejo de hoy</p>
@@ -133,26 +139,27 @@ export default function DashboardPage() {
               Sube tus exámenes apenas los recibas para mantener tu historial actualizado.
             </p>
             <div className="flex justify-center">
-              <div className="w-20 h-20 rounded-full bg-primary-light flex items-center justify-center">
-                <span className="text-3xl">🤖</span>
-              </div>
+              <img src={robotImg} alt="Robot IA" className="w-24 h-24 object-contain" />
             </div>
           </div>
 
           {/* Protege tu información */}
-          <div className="bg-primary-dark rounded-xl p-4 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck size={16} className="text-primary-text" />
-              <p className="text-sm font-medium">Protege tu información</p>
+          <div className="rounded-xl overflow-hidden text-white relative min-h-80" style={{ backgroundImage: `url(${fondoSeguridadImg})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+           <div className="p-4 flex flex-col justify-between h-full min-h-80">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck size={16} className="text-white" />
+                <p className="text-sm font-medium text-white">Protege tu información</p>
+              </div>
+              <p className="text-xs text-white/90 leading-relaxed">
+                Tu historial médico está cifrado y protegido. Solo tú decides quién puede verlo.
+              </p>
             </div>
-            <p className="text-xs text-primary-subtle leading-relaxed mb-4">
-              Tu historial médico está cifrado y protegido. Solo tú decides quién puede verlo.
-            </p>
-            <button className="w-full py-2 rounded-lg bg-primary-mid text-white text-xs hover:bg-primary-accent transition-colors">
+            <button className="w-full py-2 rounded-lg bg-primary-mid text-white text-xs hover:bg-primary-accent transition-colors mt-2">
               Ver más
             </button>
           </div>
-
+          </div>
         </div>
 
       </div>
