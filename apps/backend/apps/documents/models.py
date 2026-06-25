@@ -39,7 +39,7 @@ class Document(models.Model):
         REPORT = "report", "Report"
         VACCINE = "vaccine", "Vaccine"
         OTHER = "other", "Other"
-
+    
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
